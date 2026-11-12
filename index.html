@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Speed Rail">
+<style>*,*::before,*::after{box-sizing:border-box}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Speed Rail Drill</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Atkinson+Hyperlegible:wght@400;700&family=Azeret+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one screen. Top = cocktail name, timer, what's in the glass. Bottom = swipeable colour-coded ingredient panels that flip to measures, then Submit. Bright by default, Night mode via toggle. */
+:root{
+  --bg:#fdfcf8; --surface:#ffffff; --line:#e6e0d4; --fg:#1a1611; --muted:#6e655a;
+  --accent:#ff5a1f; --accent-ink:#ffffff;
+  --c-base:#f2700f; --t-base:#ffeedd;
+  --c-liq:#d92b72;  --t-liq:#fde4ee;
+  --c-juice:#169a59; --t-juice:#ddf4e7;
+  --c-sweet:#2a72dc; --t-sweet:#e2edff;
+  --c-gar:#8a3fd1;  --t-gar:#f0e4fb;
+  --good:#118a49; --good-bg:#e3f5ea; --bad:#e01f1f; --bad-bg:#fde8e8;
+  --band:#1d1814; --tray:#fff4c2; --gline:#5c544b; --gfill:rgba(150,190,215,.14);
+  --cardback:#b8142c; --cardlace:#e8435a; --cardcream:#fffaf0; --cardink:#1d1814;
+  --display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
+  --body:'Atkinson Hyperlegible',system-ui,-apple-system,sans-serif;
+  --mono:'Azeret Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+:root[data-mode="night"]{
+  --bg:#13100e; --surface:#1e1916; --line:#3a312a; --fg:#f5ede3; --muted:#ad9f90;
+  --accent:#ff7038; --accent-ink:#1a0c04;
+  --c-base:#ff9447; --t-base:#3a2412;
+  --c-liq:#ff5c9a;  --t-liq:#3b1627;
+  --c-juice:#3dd083; --t-juice:#12301f;
+  --c-sweet:#5c9fff; --t-sweet:#14263f;
+  --c-gar:#b781f2;  --t-gar:#2b183c;
+  --good:#52d88c; --good-bg:#12301e; --bad:#ff6b6b; --bad-bg:#3b1a1a;
+  --band:#2c241f; --tray:#3a3216; --gline:#d6c9b9; --gfill:rgba(190,215,235,.08);
+  --cardback:#7e1424; --cardlace:#a8303f; --cardcream:#f3e9d9; --cardink:#1d1814;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;-webkit-tap-highlight-color:transparent;transition:background .2s}
+#app{height:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ghost{min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;font-size:14px}
+.primary{width:100%;min-height:54px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:18px}
+.primary:disabled{opacity:.35}
+.mode{min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.mode i{width:12px;height:12px;border-radius:50%;background:var(--fg);box-shadow:inset -4px -2px 0 var(--surface)}
+
+/* Home */
+.home{height:100%;overflow-y:auto}
+.home-in{max-width:560px;margin:0 auto;padding-block:16px 32px;display:flex;flex-direction:column;gap:20px}
+.hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:64px;line-height:.88;margin:6px 0 0;text-transform:uppercase}
+h1 .a{color:var(--c-base)} h1 .b{color:var(--c-liq)}
+.stripe{display:flex;gap:6px;margin-top:12px}
+.stripe i{height:6px;flex:1;border-radius:3px}
+.lede{color:var(--muted);margin:10px 0 0;line-height:1.45;max-width:40ch}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:16px}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.seg button{min-height:62px;border-radius:14px;border:2px solid transparent;background:var(--t);color:var(--fg);font-family:var(--display);font-weight:800;font-size:28px;line-height:1}
+.seg button small{display:block;font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.seg button[aria-pressed="true"]{background:var(--c);color:#fff}
+.seg button[aria-pressed="true"] small{color:#fff}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;line-height:1.4}
+.steps .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--mono);font-size:13px;font-weight:600}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .r{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.muted{color:var(--muted)} .small{font-size:13px}
+details summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:20px}
+details[open] summary::after{content:"\2212"}
+.spec{padding:12px 0;border-bottom:1px solid var(--line)}
+.spec:last-child{border-bottom:0}
+.spec h3{margin:0 0 6px;font-size:16px}
+.spec div{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:2px 0}
+.spec div span:last-child{font-family:var(--mono);white-space:nowrap;color:var(--muted)}
+
+/* Play: one screen */
+.play{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+.upper{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding-top:12px}
+.top{display:flex;align-items:center;gap:10px}
+.prog{flex:1;min-width:0}
+.prog .lbl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-weight:700}
+.prog .lbl b{color:var(--fg);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--line);margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c-base),var(--c-liq),var(--c-sweet));border-radius:3px;transition:width .3s}
+.namerow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.namerow .nm{min-width:0}
+.cname{font-family:var(--display);font-weight:800;font-size:42px;line-height:.92;text-transform:uppercase;text-wrap:balance}
+.tmr{font-family:var(--mono);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;color:var(--accent);white-space:nowrap}
+.glass{flex:1;min-height:0;overflow-y:auto;background:var(--surface);border:1.5px dashed var(--line);border-radius:16px;padding:10px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.glass .empty{font-size:14px;color:var(--muted);margin:auto;text-align:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 4px 5px 10px;border-radius:999px;background:var(--t);border:1.5px solid var(--c);font-size:14px;font-weight:700;color:var(--fg);height:max-content}
+.chip em{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--c)}
+.chip button{width:26px;height:26px;border-radius:50%;border:0;background:transparent;color:var(--fg);font-size:17px;line-height:1;opacity:.6}
+
+.lower{padding-top:12px;padding-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.deck{position:relative;background:var(--surface);border:1.5px solid var(--line);border-radius:18px;transition:transform .17s ease-in;transform-origin:50% 50%}
+.deck.out{transform:perspective(900px) rotateY(90deg)}
+.tabs{display:flex;gap:6px;padding:10px 10px 0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:0;background:var(--t);color:var(--fg);font-size:13px;font-weight:700;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--c);color:#fff}
+.pages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.pages::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;scroll-snap-align:start;padding:10px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,50px);gap:7px}
+.ing{border-radius:12px;border:2px solid transparent;background:var(--t);color:var(--fg);font-weight:700;font-size:14px;line-height:1.1;text-align:left;padding:6px 10px;position:relative;word-break:break-word}
+.ing:active{transform:scale(.96)}
+.ing.added{border-color:var(--c)}
+.ing.added::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--c)}
+.dots{display:flex;justify-content:center;gap:6px;padding:0 0 10px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s,width .2s}
+.dots i.on{background:var(--c);width:18px;border-radius:4px}
+.front.away{visibility:hidden}
+.back{position:absolute;inset:0;padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;border-radius:18px;background:var(--t)}
+.back .hd{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.howmuch{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;text-transform:uppercase;color:var(--c)}
+.mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.mbtn{min-height:46px;border-radius:12px;border:2px solid var(--c);background:var(--surface);color:var(--fg);font-family:var(--mono);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.mbtn.wide{grid-column:span 2}
+.mbtn:active{background:var(--c);color:#fff}
+.backbtn{min-height:36px;padding:0 12px;border-radius:999px;border:0;background:var(--surface);font-weight:700;font-size:13px}
+
+/* Result */
+.sheet{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet-in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.verdict{border-radius:18px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.verdict.ok{background:var(--good-bg);color:var(--good)}
+.verdict.no{background:var(--bad-bg);color:var(--bad)}
+.verdict .v{font-family:var(--display);font-weight:800;font-size:38px;text-transform:uppercase;line-height:1}
+.verdict .t{font-family:var(--mono);font-weight:600;font-size:22px;text-align:right;font-variant-numeric:tabular-nums}
+.verdict .t small{display:block;font-family:var(--body);font-size:12px;font-weight:700}
+.badge{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+.col{min-width:0}
+.col h4{margin:0 0 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ans{padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.35;color:var(--fg)}
+.ans:last-child{border-bottom:0}
+.ans .m{font-family:var(--mono);font-size:13px}
+.ans s{text-decoration:line-through;text-decoration-color:var(--bad);text-decoration-thickness:2.5px;color:var(--fg)}
+.fix{color:var(--bad);font-weight:700}
+.fix .m{color:var(--bad)}
+.tick{color:var(--good);font-weight:700;margin-right:4px}
+.btnrow{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.btnrow .ghost{min-height:54px;font-size:16px}
+.big{font-family:var(--display);font-weight:800;font-size:76px;line-height:.9;font-variant-numeric:tabular-nums}
+.ic{font-weight:700;width:18px;display:inline-block}
+.ic.ok{color:var(--good)} .ic.no{color:var(--bad)}
+/* Modes */
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.modebtn{text-align:left;padding:12px;border-radius:14px;border:2px solid transparent;background:var(--t);color:var(--fg);min-height:74px;display:flex;flex-direction:column;gap:3px}
+.modebtn b{font-size:16px}
+.modebtn span{font-size:12.5px;color:var(--muted);line-height:1.3}
+.modebtn[aria-pressed="true"]{background:var(--c);color:#fff}
+.modebtn[aria-pressed="true"] span{color:#fff;opacity:.9}
+.modebtn.wide2{grid-column:span 2}
+/* Play layout: dark name band, yellow tray, ingredients left, measure ladder right */
+.pl{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+.band{background:var(--band);color:#fff;border-radius:0 0 18px 18px;overflow:hidden}
+.band-in{display:flex;align-items:center;gap:10px;padding-block:10px}
+.bandbtn{min-height:36px;padding:0 10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-weight:700;font-size:13px;flex:0 0 auto}
+.bname{flex:1;min-width:0}
+.bmeta{font-size:11.5px;color:rgba(255,255,255,.72);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bmeta b{color:#fff;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.again{color:#ff8fb8}
+.lastlink{border:0;background:transparent;padding:0;color:#ffcf6b;font-weight:700;font-size:11.5px;text-decoration:underline;text-underline-offset:2px}
+.cname2{font-family:var(--display);font-weight:800;font-size:30px;line-height:.95;text-transform:uppercase;text-wrap:balance}
+.btmr{text-align:right;font-family:var(--mono);font-weight:600;font-size:19px;color:#ffb27a;font-variant-numeric:tabular-nums;white-space:nowrap}
+.btmr small{display:block;font-family:var(--body);font-size:10.5px;color:rgba(255,255,255,.65);font-weight:700}
+.bar.flat{margin:0;border-radius:0;height:4px;background:rgba(255,255,255,.15)}
+.tray{background:var(--tray);border-radius:12px;padding:6px;display:flex;flex-wrap:wrap;gap:5px;min-height:34px;max-height:82px;overflow-y:auto;align-content:flex-start}
+.tray .empty{font-size:12.5px;color:var(--muted);align-self:center;padding-left:4px}
+.chip.sm{font-size:11.5px;padding:2px 2px 2px 8px;gap:4px;border-width:1px}
+.chip.sm em{font-size:10.5px}
+.chip.sm button{width:22px;height:22px;font-size:14px}
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 66px;gap:8px;padding-block:8px}
+.ipanel{min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.phd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.minibtn{min-height:30px;padding:0 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:12px;font-weight:700}
+.g3{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.gbase{grid-auto-rows:minmax(48px,1fr)}
+.gall{grid-auto-rows:minmax(30px,1fr)}
+.sec{grid-column:1/-1;border-top:3px solid var(--fg);padding-top:2px;margin-top:3px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--fg)}
+.sec:first-child{margin-top:0}
+.gall{grid-auto-rows:auto!important}
+.gall .ing2{min-height:30px;font-size:11px!important;padding:2px 5px!important;gap:4px}
+.gall .ing2 .sw{width:9px;height:9px}
+.gall .ing2 .sw.gar{width:8px;height:8px}
+.gall{gap:4px!important}
+.ing2 span:last-child{word-break:normal;overflow-wrap:normal;hyphens:manual;min-width:0}
+.ing2 .sw{flex:0 0 auto;width:12px;height:12px;border-radius:50%;background:var(--rc);border:1.5px solid color-mix(in srgb,var(--rc) 55%,var(--fg))}
+.ing2 .sw.gar{border-radius:2px;transform:rotate(45deg);width:10px;height:10px}
+.ing2{border-radius:9px;border:2px solid transparent;background:var(--t);color:var(--fg);font-weight:700;line-height:1.05;text-align:left;padding:3px 7px;position:relative;word-break:break-word;font-size:14px}
+.gall .ing2{font-size:11.5px;padding:2px 6px}
+.ing2.added{border-color:var(--c)}
+.ing2.sel{background:var(--c);color:#fff;border-color:var(--c)}
+.ing2:active{transform:scale(.96)}
+.ing2{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--rc) 24%,var(--surface))}
+.ing2.added{border-color:color-mix(in srgb,var(--rc) 50%,var(--fg))}
+.ing2.sel{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ladder{display:flex;flex-direction:column;gap:4px;min-height:0}
+.lb{flex:1;min-height:24px;border-radius:9px;border:2px solid var(--c);background:var(--t);color:var(--fg);font-family:var(--mono);font-size:12.5px;font-weight:600;padding:0 2px;font-variant-numeric:tabular-nums}
+.lb:active{background:var(--c);color:#fff}
+.ladder.off .lb{border-color:var(--line);background:var(--surface);color:var(--muted)}
+.ansbtn{flex:0 0 auto;min-height:34px;border-radius:9px;border:0;background:var(--fg);color:var(--bg);font-size:10.5px;font-weight:700;line-height:1.05;padding:2px}
+.sw2{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--rc);border:1.5px solid color-mix(in srgb,var(--rc) 55%,var(--fg));margin-right:7px;vertical-align:-1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tog{min-height:36px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700}
+.tog[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tog[aria-pressed="true"]::before{content:"\2713  "}
+.flows{display:flex;flex-direction:column;gap:5px;max-height:64vh;overflow-y:auto}
+.flow{display:grid;grid-template-columns:minmax(0,1fr) 9px minmax(0,1fr) 9px minmax(0,1fr) 9px minmax(0,1fr);align-items:stretch;gap:2px;padding:5px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--fg);text-align:center;width:100%}
+.flow:active{border-color:var(--fg)}
+.st{--kc:var(--c-sweet);--kt:var(--t-sweet);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;border-radius:8px;background:var(--kt);min-width:0}
+.st svg,.legend svg{width:20px;height:20px;fill:none;stroke:var(--kc);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.st b{font-size:9.5px;line-height:1.1;font-weight:700;overflow-wrap:anywhere}
+.k-prep{--kc:var(--c-sweet);--kt:var(--t-sweet)}
+.k-act{--kc:var(--c-base);--kt:var(--t-base)}
+.k-strain{--kc:var(--c-liq);--kt:var(--t-liq)}
+.k-fin{--kc:var(--c-juice);--kt:var(--t-juice)}
+.arr{display:flex;align-items:center;justify-content:center}
+.arr svg{width:7px;height:12px;fill:none;stroke:var(--muted);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 2px 4px;font-size:11px;font-weight:700;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:3px}
+.legend svg{width:15px;height:15px}
+.fb .flow{margin-top:6px;border-color:var(--bad)}
+.logstat{margin-top:8px;font-size:14px;color:var(--muted)}
+.logstat b{font-family:var(--display);font-size:28px;color:var(--fg)}
+.logrows{max-height:260px;overflow-y:auto;margin-top:6px}
+.logrows .row{font-size:13.5px;align-items:flex-start}
+.logrows .row > span:first-child{min-width:0}
+.sumout{margin-top:12px;padding:14px;border-radius:14px;background:var(--tray);white-space:pre-wrap;font-size:14.5px;line-height:1.5}
+.rec .row{font-size:15px}
+.rank{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--t-base);color:var(--c-base);font-family:var(--mono);font-size:12px;font-weight:600;margin-right:8px}
+.rec .rows .row:first-child .rank{background:var(--c-base);color:#fff}
+.badge.nr{background:var(--c-juice);color:#fff;margin:0 0 0 6px;vertical-align:2px}
+.more summary{margin-top:8px;font-size:13px;color:var(--muted)}
+.more summary::after{content:""}
+.ggrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.gbtn{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-height:96px;padding:8px 4px 7px;border-radius:12px;border:2px solid transparent;background:var(--t);color:var(--fg)}
+.gbtn b{font-size:12.5px;line-height:1.1;text-align:center}
+.gbtn:active{border-color:var(--c)}
+.gsvg{width:44px;height:53px;flex:0 0 auto;fill:none;stroke:var(--c);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gsvg .bowl{fill:color-mix(in srgb,var(--c) 18%,transparent)}
+.gans{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.gans .gbtn{min-height:0;width:92px;background:var(--surface)}
+.gans .gbtn.ok{--c:var(--good);border-color:var(--good)}
+.gans .gbtn.no{--c:var(--bad);border-color:var(--bad);opacity:.85}
+.gans .gbtn.no s{text-decoration-color:var(--bad);text-decoration-thickness:2px}
+.pgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.namerow .tmr{flex:0 0 auto}
+.namerow .cname{font-size:clamp(28px,10vw,42px)}
+.pbtn{display:flex;align-items:center;justify-content:center;padding:3px 0;border-radius:10px;border:2px solid transparent;background:var(--surface);aspect-ratio:3/4;max-width:100%}
+.pbtn:active{border-color:var(--c)}
+.dsvg{width:100%;height:100%;display:block}
+.pans{display:flex;flex-direction:column;align-items:center;gap:3px;width:118px;padding:8px 6px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--fg)}
+.pans .dsvg{width:66px;height:88px}
+.pans b{font-size:13px;line-height:1.15;text-align:center}
+.pans small{font-size:11px;font-weight:700;color:var(--muted)}
+.pans.ok{border-color:var(--good)} .pans.no{border-color:var(--bad)}
+.pans s{text-decoration-color:var(--bad);text-decoration-thickness:2px}
+.hero > .ghost{flex:0 0 auto}
+.dtitle{font-family:var(--display);font-weight:800;font-size:clamp(40px,12vw,52px);line-height:.9;margin:4px 0 0;text-transform:uppercase;color:var(--cardback)}
+.dprog{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;font-weight:700;color:var(--muted)}
+.dprog b{font-family:var(--mono);color:var(--fg)}
+.dprog .ok{color:var(--good)} .dprog .no{color:var(--bad)}
+.deckgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (min-width:480px){.deckgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pcard,.bc-front{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:5/7;max-width:100%;padding:8px;border:5px solid var(--cardcream);border-radius:12px;
+  background:repeating-linear-gradient(45deg,var(--cl,var(--cardlace)) 0 2px,transparent 2px 9px),repeating-linear-gradient(-45deg,var(--cl,var(--cardlace)) 0 2px,transparent 2px 9px),var(--cbg,var(--cardback));
+  box-shadow:0 0 0 1px var(--cr,var(--line)),0 4px 10px rgba(0,0,0,.14);color:var(--cardink)}
+.pcard:active{transform:scale(.97)}
+.pc-label{background:var(--cardcream);border-radius:999px/60%;padding:8px 6px;width:100%;text-align:center;font-family:var(--display);font-weight:800;font-size:clamp(12px,3.7vw,17px);line-height:.95;text-transform:uppercase;text-wrap:balance;box-shadow:0 0 0 2px var(--cr,var(--cardback)),0 0 0 4px var(--cardcream)}
+.pcard{padding:5px}
+.pcard .pc-label{padding:7px 3px}
+.pc-label.sm{font-size:clamp(10px,3vw,14px)}
+.pc-label.big{font-size:34px;padding:18px 12px;width:84%}
+.pcard.m-ok,.pcard.m-no{opacity:.62}
+.pc-mark{position:absolute;top:-3px;right:-3px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.m-ok .pc-mark{background:var(--good)} .m-no .pc-mark{background:var(--bad)}
+.csheet{background:var(--bg)}
+.csheet .minibtn{white-space:nowrap;flex:0 0 auto}
+.bigcard{perspective:1600px;width:min(100%,360px);margin:0 auto}
+.bc-in{display:grid;transition:transform .6s cubic-bezier(.3,.7,.2,1);transform-style:preserve-3d}
+.bigcard.flipped .bc-in{transform:rotateY(180deg)}
+.bc-face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;min-width:0}
+.bc-front{flex-direction:column;gap:16px;aspect-ratio:auto;min-height:320px;border-width:8px;border-radius:18px}
+.bc-hint{background:var(--cardink);color:var(--cardcream);font-size:13px;font-weight:700;padding:6px 14px;border-radius:999px}
+.bc-back{transform:rotateY(180deg);background:var(--cardcream);color:var(--cardink);border-radius:18px;border:3px solid var(--ct,var(--cardback));padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 14px rgba(0,0,0,.16)}
+.bigcard.flipped .bc-front{pointer-events:none}
+.pc-h{display:flex;flex-direction:column;gap:2px}
+.pc-h .eyebrow{color:#7a6d60}
+.pc-n{font-family:var(--display);font-weight:800;font-size:32px;line-height:.92;text-transform:uppercase;color:var(--ct,var(--cardback))}
+.pc-top{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:start}
+.pc-pic{--gline:#5c544b;--gfill:rgba(150,190,215,.14);background:#fff;border-radius:10px;padding:4px;aspect-ratio:3/4}
+.pc-lines{display:flex;flex-direction:column}
+.pc-ln{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px;align-items:baseline;padding:4px 0;border-bottom:1px dashed #d9cfc0;font-size:13.5px;line-height:1.2}
+.pc-ln:last-child{border-bottom:0}
+.pc-ln b{font-family:var(--mono);font-size:12.5px;color:var(--ct,var(--cardback));white-space:nowrap}
+.pc-meta span{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.pc-meta .gsvg{--c:var(--ct,var(--cardback));width:26px;height:32px}
+.bc-back .flow{--t-sweet:#e2edff;--t-base:#ffeedd;--t-liq:#fde4ee;--t-juice:#ddf4e7;--c-sweet:#2a72dc;--c-base:#f2700f;--c-liq:#d92b72;--c-juice:#169a59;--muted:#7a6d60;background:#fff;border-color:#e6dccd;color:#1a1611}
+.after{display:flex;flex-direction:column;gap:10px;width:min(100%,360px);margin:0 auto}
+.markbtn.on-ok{background:var(--good);border-color:var(--good);color:#fff}
+.markbtn.on-no{background:var(--bad);border-color:var(--bad);color:#fff}
+@media (prefers-reduced-motion:reduce){.bc-in{transition:none}}
+.relaxtog{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);text-align:left}
+.relaxtog .rl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.relaxtog b{font-size:15px}
+.relaxtog small{font-size:12.5px;color:var(--muted);line-height:1.3}
+.relaxtog .track{flex:0 0 auto;width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;transition:background .2s}
+.relaxtog .track i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.relaxtog[aria-pressed="true"]{border-color:var(--c-juice);background:var(--t-juice)}
+.relaxtog[aria-pressed="true"] .track{background:var(--c-juice)}
+.relaxtog[aria-pressed="true"] .track i{transform:translateX(18px)}
+.relaxnote{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--t-juice);font-size:13.5px;line-height:1.4}
+.relaxpill{display:none;flex:0 0 auto;padding:4px 10px;border-radius:999px;background:var(--c-juice);color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+:root[data-relax] .relaxpill{display:inline-block}
+:root[data-relax] .tmr,:root[data-relax] .btmr,:root[data-relax] .rtotw,:root[data-relax] .verdict .t{display:none!important}
+@media (prefers-reduced-motion:reduce){.relaxtog .track,.relaxtog .track i{transition:none}}
+.prevbtn{align-self:flex-start;max-width:100%;min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prevbtn b{color:var(--fg)}
+.stepper{display:inline-flex;align-items:center;gap:6px}
+.stepper b{min-width:52px;text-align:center;font-family:var(--mono);font-size:17px;font-variant-numeric:tabular-nums}
+.stepper button{width:44px;height:44px;border-radius:12px;border:0;background:var(--t-liq);color:var(--c-liq);font-size:22px;font-weight:700}
+.next{width:100%;min-height:42px;border-radius:12px;border:1.5px dashed var(--line);background:transparent;font-weight:700;font-size:14px;color:var(--muted)}
+/* Toast + wrong-tap shake */
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;width:max-content;max-width:calc(100% - 32px);padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.18);animation:pop .18s ease-out}
+.toast.bad{background:var(--bad);color:#fff}
+.toast.good{background:var(--good);color:#fff}
+.toast.info{background:var(--fg);color:var(--bg)}
+@keyframes pop{from{transform:translate(-50%,8px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.nope{animation:nope .3s;border-color:var(--bad)!important;background:var(--bad-bg)!important}
+.btn2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn2 .ghost{min-height:54px;font-size:16px}
+.btn3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.btn3 .ghost{min-height:54px;font-size:15px;padding:0 6px}
+/* Drill question area */
+.qa{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.qtext{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;text-transform:uppercase;color:var(--c)}
+.fb{border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;font-size:16px}
+.fb.ok{background:var(--good-bg)} .fb.no{background:var(--bad-bg)}
+.fb .v{font-family:var(--display);font-weight:800;font-size:30px;text-transform:uppercase;line-height:1}
+.fb.ok .v{color:var(--good)} .fb.no .v{color:var(--bad)}
+.fb s{text-decoration-color:var(--bad);text-decoration-thickness:2.5px}
+.locked{pointer-events:none;opacity:.55}
+@media (prefers-reduced-motion:reduce){.deck,.bar i,.dots i{transition:none}.nope,.toast{animation:none}}
+@media (max-width:360px){.cname{font-size:34px}h1{font-size:54px}.ing{font-size:13px}}
+@media (max-height:700px){.grid{grid-template-rows:repeat(4,44px)}.cname{font-size:34px}.mbtn{min-height:40px}}
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------- Ingredients ---------- */
+const ING = {
+  vodka:{n:'Vodka',p:'base',t:'liquid'}, vanilla_vodka:{n:'Vanilla Vodka',p:'base',t:'liquid'}, citrus_vodka:{n:'Citrus Vodka',p:'base',t:'liquid'},
+  gin:{n:'Gin',p:'base',t:'liquid'}, white_rum:{n:'White Rum',p:'base',t:'liquid'}, aged_rum:{n:'Aged Rum',p:'base',t:'liquid'},
+  dark_rum:{n:'Dark Rum',p:'base',t:'liquid'}, tequila:{n:'Tequila',p:'base',t:'liquid'}, bourbon:{n:'Bourbon',p:'base',t:'liquid'},
+  rye:{n:'Rye Whiskey',p:'base',t:'liquid'}, amaretto:{n:'Amaretto',p:'base',t:'liquid'}, aperol:{n:'Aperol',p:'base',t:'liquid'},
+
+  campari:{n:'Campari',p:'liq',t:'liquid'}, sweet_verm:{n:'Sweet Vermouth',p:'liq',t:'liquid'}, dry_verm:{n:'Dry Vermouth',p:'liq',t:'liquid'},
+  coffee_liq:{n:'Coffee Liqueur',p:'liq',t:'liquid'}, pf_liq:{n:'Passion Fruit Liqueur',p:'liq',t:'liquid'}, triple_sec:{n:'Triple Sec',p:'liq',t:'liquid'},
+  cointreau:{n:'Cointreau',p:'liq',t:'liquid'}, curacao:{n:'Orange Curaçao',p:'liq',t:'liquid'}, chambord:{n:'Chambord / Raspberry',p:'liq',t:'liquid'},
+  peach:{n:'Peach Schnapps',p:'liq',t:'liquid'},
+
+  lime:{n:'Lime Juice',p:'juice',t:'liquid'}, lemon:{n:'Lemon Juice',p:'juice',t:'liquid'}, cranberry:{n:'Cranberry Juice',p:'juice',t:'liquid'},
+  pineapple:{n:'Pineapple Juice',p:'juice',t:'liquid'}, oj:{n:'Orange Juice',p:'juice',t:'liquid'}, tomato:{n:'Tomato Juice',p:'juice',t:'liquid'},
+  pf_puree:{n:'Passion Fruit Purée',p:'juice',t:'liquid'}, espresso:{n:'Fresh Espresso',p:'juice',t:'liquid'}, coconut:{n:'Coconut Cream',p:'juice',t:'liquid'},
+  egg:{n:'Egg White',p:'juice',t:'liquid'}, mint:{n:'Mint Leaves',p:'juice',t:'leaf'},
+
+  sugar:{n:'Sugar Syrup',p:'sweet',t:'liquid'}, sugar_cube:{n:'Sugar Cube',p:'sweet',t:'cube'}, orgeat:{n:'Orgeat Syrup',p:'sweet',t:'liquid'},
+  soda:{n:'Soda Water',p:'sweet',t:'liquid'}, cola:{n:'Cola',p:'sweet',t:'liquid'}, ginger_beer:{n:'Ginger Beer',p:'sweet',t:'liquid'},
+  prosecco:{n:'Prosecco',p:'sweet',t:'wine'}, angostura:{n:'Angostura Bitters',p:'sweet',t:'dash'}, worcestershire:{n:'Worcester Sauce',p:'sweet',t:'dash'},
+  tabasco:{n:'Tabasco',p:'sweet',t:'dash'}, salt_pepper:{n:'Salt & Pepper',p:'sweet',t:'pinch'},
+
+  orange_peel:{n:'Orange Peel',p:'gar',t:'count'}, orange_twist:{n:'Flamed Orange Twist',p:'gar',t:'count'}, lemon_twist:{n:'Lemon Twist',p:'gar',t:'count'},
+  orange_slice:{n:'Orange Slice',p:'gar',t:'count'}, lemon_slice:{n:'Lemon Slice',p:'gar',t:'count'}, lemon_wedge:{n:'Lemon Wedge',p:'gar',t:'count'},
+  lime_wedge:{n:'Lime Wedge',p:'gar',t:'count'}, lime_wheel:{n:'Lime Wheel',p:'gar',t:'count'}, mint_sprig:{n:'Mint Sprig',p:'gar',t:'count'},
+  cherry:{n:'Cherry',p:'gar',t:'count'}, olive:{n:'Olive',p:'gar',t:'count'}, raspberry:{n:'Raspberry',p:'gar',t:'count'},
+  pineapple_wedge:{n:'Pineapple Wedge',p:'gar',t:'count'}, pf_half:{n:'Half Passion Fruit',p:'gar',t:'count'}, coffee_beans:{n:'Coffee Beans',p:'gar',t:'count'},
+  celery:{n:'Celery Stick',p:'gar',t:'count'},
+  salt_rim:{n:'Salt Rim',p:'gar',t:'rim'}
+};
+/* Real-life colour of each ingredient (swatch + button tint) */
+const COL = {
+  vodka:'#dfe6ea', vanilla_vodka:'#f1e3b5', citrus_vodka:'#f3ea9b', gin:'#c9e8e0', white_rum:'#ececec', aged_rum:'#b8661f',
+  dark_rum:'#5a2d0c', tequila:'#eadb9f', bourbon:'#c46a1c', rye:'#a3501a', amaretto:'#9c4f17', aperol:'#f26b1d',
+  campari:'#c8102e', sweet_verm:'#7a1f1f', dry_verm:'#e8e2b0', coffee_liq:'#3b2314', pf_liq:'#f2a900', triple_sec:'#efe9d2',
+  cointreau:'#f0b44c', curacao:'#e07b1a', chambord:'#6b1e3f', peach:'#f6a96b',
+  lime:'#7cc242', lemon:'#f7e04b', cranberry:'#b3122e', pineapple:'#f5c518', oj:'#f7931e', tomato:'#d7261e',
+  pf_puree:'#f2b705', espresso:'#3e2516', coconut:'#f4efe6', egg:'#f3edcf', mint:'#3fa34d',
+  sugar:'#efe9dc', sugar_cube:'#ffffff', orgeat:'#e8d6b8', soda:'#cfeaf6', cola:'#3a1f12', ginger_beer:'#d9b25c',
+  prosecco:'#f0dc8e', angostura:'#7a2b16', worcestershire:'#3d1d10', tabasco:'#c1271b', salt_pepper:'#9a9a9a',
+  orange_twist:'#f7931e', orange_slice:'#fb9a2c', lemon_twist:'#f7e04b', lemon_wedge:'#f2d40a', lime_wedge:'#6db33f',
+  cherry:'#b5121b', olive:'#6b8e23', coffee_beans:'#4a2c17', celery:'#9bc53d', salt_rim:'#ffffff',
+  orange_peel:'#e8741a', lemon_slice:'#f7e04b', lime_wheel:'#8cc63f', mint_sprig:'#3fa34d', raspberry:'#d6245a', pineapple_wedge:'#f5c518', pf_half:'#6b2d6b'
+};
+/* Glassware (accepted answers) and preparation methods */
+const GLASS = {rocks:'Rocks', highball:'Highball / Collins', martini:'Martini', coupe:'Coupe', nicknora:'Nick & Nora',
+  margarita:'Margarita glass', hurricane:'Hurricane', wine:'Wine glass', mug:'Copper mug'};
+/* Glass silhouettes (viewBox 0 0 40 48). First path = the bowl, filled with a light tint */
+const GLASS_SVG = {
+  rocks:    ['M8 18h24l-2.2 24H10.2z', 'M10.4 37h19.2'],
+  highball: ['M12 4h16l-1.2 40H13.2z', 'M13 39h14'],
+  martini:  ['M4 6h32L20 23z', 'M20 23v19M12 44h16'],
+  coupe:    ['M5 9h30c0 8-7 13-15 13S5 17 5 9z', 'M20 22v20M12 44h16'],
+  nicknora: ['M12 8h16c0 9-3.5 13-8 13S12 17 12 8z', 'M20 22v20M13 44h14'],
+  margarita:['M4 6h32c0 6-6 8-10 8 0 4-3 7-6 7s-6-3-6-7c-4 0-10-2-10-8z', 'M20 21v21M12 44h16'],
+  hurricane:['M13 3h14c0 6-4 8-4 14s5 8 5 13-4 8-8 8-8-3-8-8 5-7 5-13-4-8-4-14z', 'M20 38v5M13 45h14'],
+  wine:     ['M11 3h18c2 6 3 9 3 12 0 6-5 9-12 9S8 21 8 15c0-3 1-6 3-12z', 'M20 24v18M12 44h16'],
+  mug:      ['M7 10h22v31H7z', 'M29 16h4a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-4']
+};
+const glassSvg = g => `<svg class="gsvg" viewBox="0 0 40 48" aria-hidden="true"><path class="bowl" d="${GLASS_SVG[g][0]}"/><path d="${GLASS_SVG[g][1]}"/></svg>`;
+/* ---------- Drawn drinks for Picture match (viewBox 0 0 60 80) ---------- */
+const GEO = {
+  rocks:    {b:'M11 32h38l-3 40H14z', s:'M14.6 66h30.8', rim:[48,32]},
+  highball: {b:'M18 8h24l-2 64H20z', s:'M20 66h20', rim:[41,8]},
+  martini:  {b:'M5 16h50L30 44z', s:'M30 44v26M20 72h20', rim:[53,16]},
+  coupe:    {b:'M7 22h46c0 12-10 19-23 19S7 34 7 22z', s:'M30 41v29M20 72h20', rim:[52,22]},
+  margarita:{b:'M5 18h50c0 8-8 11-15 11 0 6-4 10-10 10s-10-4-10-10c-7 0-15-3-15-11z', s:'M30 39v31M20 72h20', rim:[53,18]},
+  hurricane:{b:'M20 4h20c0 9-6 12-6 20s8 12 8 20-6 12-12 12-12-4-12-12 8-12 8-20-6-11-6-20z', s:'M30 56v14M20 72h20', rim:[39,4]},
+  wine:     {b:'M16 8h28c3 9 4 14 4 18 0 9-8 14-18 14S12 35 12 26c0-4 1-9 4-18z', s:'M30 40v30M20 72h20', rim:[43,8]},
+  mug:      {b:'M11 24h31v48H11z', s:'M42 32h6a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4h-6', rim:[40,24]}
+};
+const PIC = {
+  old_fashioned:{g:'rocks', c:'#c1661c', lv:42, ice:'big', gar:['orange_peel']},
+  negroni:      {g:'rocks', c:'#b3121e', lv:38, ice:'cubes', gar:['orange_peel']},
+  espresso_martini:{g:'martini', c:'#2a160c', lv:20, foam:'#c99a68', gar:['beans']},
+  pf_martini:   {g:'coupe', c:'#f2b42a', lv:25, seeds:true, side:'shot', gar:['pf_half']},
+  margarita:    {g:'margarita', c:'#e2eba2', lv:21, rim:'salt', gar:['lime_wedge']},
+  mojito:       {g:'highball', c:'#e9f4d4', lv:16, ice:'crushed', limes:true, gar:['lime_wedge','mint']},
+  daiquiri:     {g:'coupe', c:'#eef2cc', lv:25, gar:['lime_wheel']},
+  whiskey_sour: {g:'rocks', c:'#e3b85a', lv:38, foam:'#fbf4e2', ice:'cubes', gar:['orange_slice','cherry_rim']},
+  amaretto_sour:{g:'rocks', c:'#b8621f', lv:38, foam:'#f4e2c8', ice:'cubes', gar:['orange_slice','cherry_rim']},
+  cosmopolitan: {g:'martini', c:'#e8436e', lv:20, gar:['orange_twist']},
+  long_island:  {g:'highball', c:'#8a4a22', lv:14, ice:'cubes', bubbles:true, gar:['lemon_slice']},
+  aperol_spritz:{g:'wine', c:'#f46a1a', lv:16, ice:'cubes', bubbles:true, gar:['orange_slice']},
+  dry_martini:  {g:'martini', c:'#eef1e6', lv:20, gar:['olive']},
+  manhattan:    {g:'coupe', c:'#8e2f12', lv:25, gar:['cherry_in']},
+  moscow_mule:  {g:'mug', gar:['lime_wedge']},
+  tom_collins:  {g:'highball', c:'#f3f0d6', lv:14, ice:'cubes', bubbles:true, gar:['lemon_slice','cherry_rim']},
+  french_martini:{g:'martini', c:'#a3203f', lv:20, foam:'#f0c9a8', gar:['raspberry']},
+  pina_colada:  {g:'hurricane', c:'#fbf3dc', lv:8, gar:['pineapple','cherry_rim']},
+  mai_tai:      {g:'rocks', c:'#d98a2a', lv:36, ice:'crushed', float:'#4a1c06', gar:['lime_wedge','mint']},
+  bloody_mary:  {g:'highball', c:'#c4221b', lv:16, ice:'cubes', gar:['lemon_wedge','celery']},
+  sex_on_beach: {g:'highball', grad:['#f8a23a','#c71f3a'], lv:14, ice:'cubes', gar:['orange_slice']}
+};
+let picN = 0;
+function drinkSvg(id){
+  const P = PIC[id], G = GEO[P.g], n = ++picN, [rx,ry] = G.rim;
+  let out = '', inner = '';
+  const iceCube = (x,y,s) => `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="1.6" fill="#fff" fill-opacity=".42" stroke="#fff" stroke-opacity=".75" stroke-width=".8"/>`;
+  if (P.g==='mug'){
+    out += iceCube(17,17,7)+iceCube(26,15,8)+iceCube(33,18,6);
+    out += `<path d="${G.b}" fill="#c0743a" stroke="#8a4f22" stroke-width="1.6" stroke-linejoin="round"/>`;
+    for (let yy=30; yy<70; yy+=7) for (let xx=15+(yy%2?3:0); xx<40; xx+=7) out += `<circle cx="${xx}" cy="${yy}" r="1.3" fill="#e2a36b" opacity=".7"/>`;
+    out += `<path d="M11 28h31" stroke="#e9b07a" stroke-width="1.2"/><path d="${G.s}" fill="none" stroke="#8a4f22" stroke-width="3" stroke-linecap="round"/>`;
+  } else {
+    const fill = P.grad ? `url(#gr${n})` : P.c;
+    if (P.grad) out += `<defs><linearGradient id="gr${n}" x1="0" y1="0" x2="0" y2="1"><stop offset=".15" stop-color="${P.grad[0]}"/><stop offset=".95" stop-color="${P.grad[1]}"/></linearGradient></defs>`;
+    inner += `<rect x="0" y="${P.lv}" width="60" height="80" fill="${fill}"/>`;
+    if (P.seeds) [[24,30],[30,33],[36,29],[27,36],[33,27],[21,27],[39,32]].forEach(([x,y])=>inner += `<ellipse cx="${x}" cy="${y}" rx="1" ry=".7" fill="#1d1208"/>`);
+    if (P.limes) [[24,40],[34,52],[26,62]].forEach(([x,y])=>inner += `<path d="M${x-4} ${y}a4.5 4.5 0 0 0 9 0z" fill="#7cc242" stroke="#4e8a22" stroke-width=".7"/>`);
+    if (P.ice==='big') inner += iceCube(23,P.lv+4,15);
+    if (P.ice==='cubes'){ const ys = P.g==='highball' ? [P.lv+3,P.lv+14,P.lv+26,P.lv+38,P.lv+50] : P.g==='wine' ? [P.lv+2,P.lv+10] : [P.lv+3,P.lv+12,P.lv+20];
+      ys.forEach((y,k)=>inner += iceCube(k%2?31:21, y, 9)); }
+    if (P.ice==='crushed') for (let y=P.lv+2; y<74; y+=4) for (let x=8+(y%8?2:0); x<54; x+=5) inner += `<circle cx="${x}" cy="${y}" r="1.5" fill="#fff" fill-opacity=".55"/>`;
+    if (P.bubbles) [[25,30],[36,40],[28,50],[34,24],[23,60],[37,58]].forEach(([x,y])=>{ if (y>P.lv+2) inner += `<circle cx="${x}" cy="${y}" r="1" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width=".6"/>`; });
+    if (P.foam) inner += `<rect x="0" y="${P.lv}" width="60" height="5" fill="${P.foam}"/>`;
+    if (P.float) inner += `<rect x="0" y="${P.lv}" width="60" height="5" fill="${P.float}"/>`;
+    out += `<defs><clipPath id="cp${n}"><path d="${G.b}"/></clipPath></defs><path d="${G.b}" fill="var(--gfill)"/><g clip-path="url(#cp${n})">${inner}</g>`;
+    out += `<path d="${G.b}" fill="none" stroke="var(--gline)" stroke-width="1.6" stroke-linejoin="round"/><path d="${G.s}" fill="none" stroke="var(--gline)" stroke-width="1.6" stroke-linecap="round"/>`;
+    if (P.rim==='salt') for (let x=6; x<=54; x+=2.4) out += `<circle cx="${x}" cy="${ry-.6}" r="1" fill="#fff" stroke="#9aa" stroke-width=".35"/>`;
+    if (P.side==='shot') out += `<path d="M47.6 60h8.4l-.8 12h-6.8z" fill="#f3e19a"/><path d="M47 54h9.6l-1.2 18h-7.2z" fill="none" stroke="var(--gline)" stroke-width="1.3" stroke-linejoin="round"/>`;
+  }
+  /* Garnish: rim pieces sit side by side along the rim, others go where they belong */
+  const RIM = ['orange_twist','orange_peel','orange_slice','lemon_slice','lime_wheel','lime_wedge','lemon_wedge','cherry_rim','raspberry','pineapple'];
+  const slice = (x,y,a,b,c) => `<circle cx="${x}" cy="${y}" r="7" fill="${a}" stroke="${c}" stroke-width="1.2"/><circle cx="${x}" cy="${y}" r="4.6" fill="${b}"/><path d="M${x} ${y-4.6}v9.2M${x-4.6} ${y}h9.2M${x-3.2} ${y-3.2}l6.4 6.4M${x+3.2} ${y-3.2}l-6.4 6.4" stroke="#fff" stroke-opacity=".6" stroke-width=".7"/>`;
+  const wedge = (x,y,a,c,l) => `<path d="M${x-7} ${y-3}a7 7 0 0 0 14 0z" fill="${a}" stroke="${c}" stroke-width="1"/><path d="M${x-5} ${y-1.5}a5 5 0 0 0 10 0" fill="none" stroke="${l}" stroke-width=".8"/>`;
+  let k = 0;
+  (P.gar||[]).forEach(g=>{
+    const x = RIM.includes(g) ? rx - 13*(k++) : rx, y = ry;
+    if (g==='orange_twist') out += `<path d="M${x-9} ${y-1}c2-6 6-5 6-1s4 5 7-1" fill="none" stroke="#f08a1c" stroke-width="2.6" stroke-linecap="round"/><path d="M${x+5} ${y-7}q-2-3 0-5q1 2 2 1q1 3-2 4z" fill="#ff9a1f"/>`;
+    if (g==='orange_peel') out += `<path d="M${x-10} ${y-1}q4-8 10-5t9-3" fill="none" stroke="#e8741a" stroke-width="4" stroke-linecap="round"/><path d="M${x-10} ${y-1}q4-8 10-5t9-3" fill="none" stroke="#ffc58a" stroke-width="1" stroke-linecap="round"/>`;
+    if (g==='orange_slice') out += slice(x,y,'#fbb040','#f7942a','#e07b10');
+    if (g==='lemon_slice') out += slice(x,y,'#fbe57a','#f7e04b','#c9a80a');
+    if (g==='lime_wheel') out += slice(x,y,'#a6d65a','#8cc63f','#4e8a22');
+    if (g==='lime_wedge') out += wedge(x,y,'#8cc63f','#4e8a22','#e8f5c8');
+    if (g==='lemon_wedge') out += wedge(x,y,'#f7e04b','#c9a80a','#fff6c4');
+    if (g==='cherry_rim') out += `<path d="M${x+1} ${y-2}q2-8 7-10" fill="none" stroke="#5a3a1a" stroke-width="1"/><circle cx="${x}" cy="${y}" r="3.4" fill="#b5121b"/><circle cx="${x-1}" cy="${y-1}" r=".9" fill="#fff" fill-opacity=".6"/>`;
+    if (g==='raspberry') [[0,-3],[-2.4,-1],[2.4,-1],[-1.2,1.2],[1.2,1.2],[0,-0.6]].forEach(([dx,dy])=>out += `<circle cx="${x+dx}" cy="${y-2+dy}" r="1.9" fill="#d6245a" stroke="#9c1240" stroke-width=".5"/>`);
+    if (g==='pineapple') out += `<path d="M${x-6} ${y+1}L${x+6} ${y+1}L${x} ${y-9}z" fill="#f5c518" stroke="#c99a0a" stroke-width="1"/><path d="M${x} ${y-9}l-3-6M${x} ${y-9}l0-7M${x} ${y-9}l3-6" stroke="#4e8a22" stroke-width="1.6" stroke-linecap="round"/>`;
+    if (g==='pf_half'){ const cy = PIC[id].lv+1; out += `<ellipse cx="30" cy="${cy}" rx="8" ry="3.8" fill="#6b2d6b"/><ellipse cx="30" cy="${cy}" rx="6.4" ry="2.8" fill="#f6c21c"/>${[[27,0],[30,-1],[33,0],[29,1],[31.5,1]].map(([sx,sy])=>`<circle cx="${sx}" cy="${cy+sy}" r=".6" fill="#1d1208"/>`).join('')}`; }
+    if (g==='cherry_in') out += `<path d="M30 30q4-8 10-12" fill="none" stroke="#5a3a1a" stroke-width="1"/><circle cx="30" cy="31" r="3.6" fill="#7a0710" stroke="#4a0308" stroke-width=".6"/><circle cx="29" cy="30" r=".9" fill="#fff" fill-opacity=".6"/>`;
+    if (g==='olive') out += `<path d="M44 6L27 36" stroke="#a07040" stroke-width="1.2" stroke-linecap="round"/><ellipse cx="30.5" cy="29.5" rx="3.6" ry="4.4" fill="#6b8e23" stroke="#4a6418" stroke-width=".7" transform="rotate(30 30.5 29.5)"/><circle cx="31.4" cy="28.2" r="1.1" fill="#d7261e"/>`;
+    if (g==='beans') [[24,0],[30,-1],[36,0]].forEach(([bx,d])=>out += `<ellipse cx="${bx}" cy="${PIC[id].lv+2.4+d}" rx="2.2" ry="1.4" fill="#3e2516"/><path d="M${bx-1.6} ${PIC[id].lv+2.4+d}h3.2" stroke="#9a6a40" stroke-width=".5"/>`);
+    if (g==='mint'){ const [mx,my] = P.g==='highball' ? [28,6] : [24,27]; [[-5,-1,-30],[0,-4,10],[4,0,40],[-2,2,-60],[2,3,70]].forEach(([dx,dy,r])=>out += `<ellipse cx="${mx+dx}" cy="${my+dy}" rx="2.6" ry="4.6" fill="#3fa34d" stroke="#2a7a35" stroke-width=".6" transform="rotate(${r} ${mx+dx} ${my+dy})"/>`); }
+    if (g==='celery') out += `<path d="M30 46L35 2" stroke="#9bc53d" stroke-width="4" stroke-linecap="round"/><path d="M30 46L35 2" stroke="#c9e48a" stroke-width="1"/><ellipse cx="32" cy="3" rx="2.4" ry="3.6" fill="#6aa42a" transform="rotate(-30 32 3)"/><ellipse cx="38" cy="3" rx="2.4" ry="3.6" fill="#6aa42a" transform="rotate(30 38 3)"/>`;
+  });
+  return `<svg class="dsvg" viewBox="0 0 60 80" aria-hidden="true">${out}</svg>`;
+}
+const GLASS_OF = {
+  old_fashioned:['rocks'], negroni:['rocks'], espresso_martini:['martini','coupe'], pf_martini:['coupe','martini'],
+  margarita:['margarita','coupe','rocks'], mojito:['highball'], daiquiri:['coupe','martini'], whiskey_sour:['rocks','coupe'],
+  amaretto_sour:['rocks'], cosmopolitan:['martini','coupe'], long_island:['highball'], aperol_spritz:['wine'],
+  dry_martini:['martini','nicknora'], manhattan:['coupe','martini','nicknora'], moscow_mule:['mug','highball'],
+  tom_collins:['highball'], french_martini:['martini','coupe'], pina_colada:['hurricane'], mai_tai:['rocks','hurricane'],
+  bloody_mary:['highball'], sex_on_beach:['highball']
+};
+/* Method steps: [icon, label]. Icon colour = step kind: prep (blue), action (orange), strain (pink), finish (green) */
+const ICON = {
+  ice:     ['prep',  '<rect x="4" y="8" width="12" height="12" rx="2"/><path d="M4 8l4-4h12v12l-4 4M16 8l4-4"/>'],
+  tin:     ['prep',  '<path d="M7 3h10l-1.5 18h-7z"/><path d="M7.4 8h9.2"/>'],
+  mixglass:['prep',  '<path d="M5 4h14l-1.2 16H6.2z"/><path d="M5.4 9h13.2"/><path d="M15 2l-3 12"/>'],
+  sugar:   ['prep',  '<rect x="3" y="12" width="8" height="8" rx="1"/><path d="M17 4s-3 3.5-3 6a3 3 0 0 0 6 0c0-2.5-3-6-3-6z"/>'],
+  bottle:  ['prep',  '<path d="M10 2h4v4l2 3v13H8V9l2-3z"/><path d="M8 13h8"/>'],
+  blender: ['prep',  '<path d="M6 3h12l-2 11H8z"/><path d="M5 14h14v7H5z"/><circle cx="12" cy="17.5" r="1"/>'],
+  shake:   ['act',   '<path d="M9 3h8l-1.3 17h-5.4z"/><path d="M5 7l-2 3 2 3M21 11l-2 3 2 3"/>'],
+  stir:    ['act',   '<path d="M5 9h14l-1.5 11h-11z"/><path d="M17 2l-5 13"/><circle cx="12" cy="15.5" r="1.2"/>'],
+  muddle:  ['act',   '<path d="M10 2h4v11h-4z"/><path d="M8 13h8v3H8z"/><path d="M4 21h16M7 18.5h10"/>'],
+  churn:   ['act',   '<path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M18 2v5h-5"/>'],
+  blend:   ['act',   '<path d="M12 4a8 8 0 1 1-8 8"/><path d="M12 8a4 4 0 1 1-4 4"/><path d="M4 12l-2-2M4 12l2-2"/>'],
+  roll:    ['act',   '<path d="M3 9h16l-4-4"/><path d="M21 15H5l4 4"/>'],
+  strain:  ['strain','<circle cx="9" cy="12" r="6"/><path d="M15 12h7M6 12h6M9 9v6"/>'],
+  dstrain: ['strain','<path d="M3 4h18l-7 8v7l-4 2v-9z"/><path d="M7 8h10"/>'],
+  up:      ['fin',   '<path d="M3 4h18l-9 9z"/><path d="M12 13v7M8 21h8"/>'],
+  rocks:   ['fin',   '<path d="M5 8h14l-1.5 12h-11z"/><rect x="8" y="12" width="4" height="4"/><rect x="12.5" y="13" width="3" height="3"/>'],
+  garnish: ['fin',   '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6"/>'],
+  top:     ['fin',   '<path d="M5 10h14l-1.5 11h-11z"/><path d="M12 8V2M9 5l3-3 3 3"/>'],
+  float:   ['fin',   '<path d="M5 6h14l-1.5 15h-11z"/><path d="M5.5 10.5h13"/><path d="M5.7 13.5h12.6"/>'],
+  crushed: ['prep',  '<rect x="4" y="13" width="5" height="5" rx="1"/><rect x="11" y="15" width="4" height="4" rx="1"/><rect x="15" y="9" width="5" height="5" rx="1"/><rect x="8" y="6" width="4" height="4" rx="1"/>']
+};
+const svgI = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k][1]}</svg>`;
+const METHOD = {
+  stir_glass: [['sugar','Sugar + bitters'],['bottle','Whiskey + ice'],['stir','Stir long'],['garnish','Garnish']],
+  stir_up:    [['mixglass','Mixing glass + ice'],['stir','Stir'],['strain','Strain'],['up','Serve up']],
+  stir_rocks: [['mixglass','Mixing glass + ice'],['stir','Stir'],['strain','Strain'],['rocks','On fresh ice']],
+  shake_up:   [['tin','Tin + ice'],['shake','Hard shake'],['dstrain','Double strain'],['up','Serve up']],
+  dry_shake:  [['shake','Dry shake'],['ice','Add ice'],['shake','Shake again'],['strain','Strain']],
+  muddle:     [['muddle','Muddle'],['crushed','Crushed ice'],['churn','Churn'],['top','Top soda']],
+  shake_top:  [['tin','Tin + ice'],['shake','Shake'],['strain','Strain on ice'],['top','Top up']],
+  build:      [['rocks','Glass + ice'],['bottle','Pour in order'],['stir','Stir gently'],['garnish','Garnish']],
+  shake_float:[['tin','Tin + ice'],['shake','Shake'],['crushed','Crushed ice'],['float','Float rum']],
+  blend:      [['blender','Blender + ice'],['blend','Blend'],['bottle','Pour'],['garnish','Garnish']],
+  roll:       [['tin','Tin + ice'],['roll','Roll'],['strain','Strain on ice'],['garnish','Garnish']]
+};
+const mText = k => METHOD[k].map(x=>x[1]);
+const flowHTML = (k, tag='button') => `<${tag} class="flow" ${tag==='button'?`data-act="dans" data-v="${k}"`:''}>${METHOD[k].map(([ic,t])=>`<span class="st k-${ICON[ic][0]}">${svgI(ic)}<b>${t}</b></span>`).join('<i class="arr"><svg viewBox="0 0 10 16" aria-hidden="true"><path d="M2 2l6 6-6 6"/></svg></i>')}</${tag}>`;
+const METHOD_OF = {
+  old_fashioned:'stir_glass', negroni:'stir_rocks', espresso_martini:'shake_up', pf_martini:'shake_up', margarita:'shake_up',
+  mojito:'muddle', daiquiri:'shake_up', whiskey_sour:'dry_shake', amaretto_sour:'dry_shake', cosmopolitan:'shake_up',
+  long_island:'shake_top', aperol_spritz:'build', dry_martini:'stir_up', manhattan:'stir_up', moscow_mule:'build',
+  tom_collins:'shake_top', french_martini:'shake_up', pina_colada:'blend', mai_tai:'shake_float', bloody_mary:'roll', sex_on_beach:'build'
+};
+const PAGES = [
+  {k:'base',  n:'Base spirit'},
+  {k:'liq',   n:'Liqueurs'},
+  {k:'juice', n:'Juice & fresh'},
+  {k:'sweet', n:'Sweet, soda & bitters'},
+  {k:'gar',   n:'Garnish'}
+];
+const PIDX = Object.fromEntries(PAGES.map((p,i)=>[p.k,i]));
+const tint = k => `--c:var(--c-${k});--t:var(--t-${k})`;
+const ML = ['5ml','10ml','15ml','20ml','25ml','30ml','40ml','50ml','60ml','75ml','100ml','Top'];
+const MEAS = { liquid:ML, wine:[...ML,'Side shot'], dash:['1 dash','2 dashes','2-4 dashes','4-6 dashes'],
+  leaf:['4-6','8-10','12-15'], cube:['1 cube','2 cubes'], pinch:['Pinch','2 pinches'], count:['1','2','3'], rim:['Rim'] };
+const showM = (i,m) => ING[i].t==='rim' ? '' : ING[i].t==='leaf' ? m+' leaves' : ING[i].t==='count' ? '×'+m : m;
+
+/* ---------- Specs ---------- */
+const L = s => s.split(' OR ').flatMap(part => { const [ings,m] = part.split('@'); return ings.split('|').map(i => ({i,m})); });
+const RAW = [
+ ['old_fashioned','Old Fashioned',['bourbon|rye@50ml','angostura@2 dashes','sugar@5ml OR sugar@10ml OR sugar_cube@1 cube','orange_peel@1']],
+ ['negroni','Negroni',['gin@25ml','campari@25ml','sweet_verm@25ml','orange_peel@1']],
+ ['espresso_martini','Espresso Martini',['vodka@40ml','coffee_liq@20ml','espresso@30ml','sugar@10ml','coffee_beans@3']],
+ ['pf_martini','Passion Fruit Martini',['vanilla_vodka|vodka@40ml','pf_liq@20ml','pf_puree@20ml','lime@15ml','sugar@10ml','prosecco@Side shot','pf_half@1']],
+ ['margarita','Margarita',['tequila@50ml','triple_sec|cointreau@25ml','lime@25ml','salt_rim@Rim','lime_wedge@1']],
+ ['mojito','Mojito',['white_rum@50ml','lime@25ml','sugar@15ml','mint@8-10','soda@Top','lime_wedge@1','mint_sprig@1']],
+ ['daiquiri','Daiquiri',['white_rum@50ml','lime@25ml','sugar@15ml','lime_wheel@1']],
+ ['whiskey_sour','Whiskey Sour',['bourbon@50ml','lemon@25ml','sugar@15ml','egg@15ml','cherry@1','orange_slice@1']],
+ ['amaretto_sour','Amaretto Sour',['amaretto@50ml','lemon@25ml','sugar@10ml','egg@15ml','cherry@1','orange_slice@1']],
+ ['cosmopolitan','Cosmopolitan',['citrus_vodka|vodka@40ml','triple_sec|cointreau@20ml','cranberry@20ml','lime@10ml','orange_twist|lemon_twist@1']],
+ ['long_island','Long Island Iced Tea',['vodka@15ml','gin@15ml','white_rum@15ml','tequila@15ml','triple_sec|cointreau@15ml','lemon@25ml','sugar@20ml','cola@Top','lemon_slice@1']],
+ ['aperol_spritz','Aperol Spritz',['prosecco@75ml','aperol@50ml','soda@25ml','orange_slice@1']],
+ ['dry_martini','Dry Martini',['gin@60ml','dry_verm@10ml','olive|lemon_twist@1']],
+ ['manhattan','Manhattan',['rye|bourbon@50ml','sweet_verm@25ml','angostura@2 dashes','cherry@1']],
+ ['moscow_mule','Moscow Mule',['vodka@50ml','lime@15ml','ginger_beer@Top','lime_wedge@1']],
+ ['tom_collins','Tom Collins',['gin@50ml','lemon@25ml','sugar@15ml','soda@Top','lemon_slice@1','cherry@1']],
+ ['french_martini','French Martini',['vodka@40ml','chambord@20ml','pineapple@50ml','raspberry|lemon_twist@1']],
+ ['pina_colada','Piña Colada',['white_rum@50ml','coconut@25ml','pineapple@75ml','lime@10ml','pineapple_wedge@1','cherry@1']],
+ ['mai_tai','Mai Tai',['aged_rum@40ml','curacao@20ml','lime@25ml','orgeat@15ml','dark_rum@10ml','lime_wedge@1','mint_sprig@1']],
+ ['bloody_mary','Bloody Mary',['vodka@50ml','tomato@100ml','lemon@15ml','worcestershire@2-4 dashes','tabasco@2-4 dashes','salt_pepper@Pinch','celery@1','lemon_wedge@1']],
+ ['sex_on_beach','Sex on the Beach',['vodka@40ml','peach@20ml','oj@40ml','cranberry@40ml','orange_slice@1']]
+];
+const REC = {}; RAW.forEach(([id,name,lines]) => REC[id] = {id,name,lines:lines.map(L)});
+const ALL = RAW.map(r => r[0]);
+
+function lineText(opts){
+  const sameM = opts.every(o => o.m === opts[0].m);
+  if (sameM) return {n:[...new Set(opts.map(o=>ING[o.i].n))].join(' or '), m:showM(opts[0].i,opts[0].m)};
+  const g = {}; opts.forEach(o=>(g[o.i] ||= []).push(o.m));
+  const ms = (i,list) => list.length>1 && list.every(m=>/^\d+ml$/.test(m)) ? parseInt(list[0])+'-'+list[list.length-1] : list.map(m=>showM(i,m)).join('/');
+  return {n:Object.entries(g).map(([i,list])=>ING[i].n+' '+ms(i,list)).join(' or '), m:''};
+}
+
+/* ---------- Checking ---------- */
+function check(rec, build){
+  const ls = rec.lines.map(()=>({s:'missing'})), bs = build.map(()=>({s:'extra'}));
+  rec.lines.forEach((opts,li) => {
+    const b = build.findIndex((it,bi) => bs[bi].s==='extra' && opts.some(o => o.i===it.i && o.m===it.m));
+    if (b>-1){ ls[li]={s:'ok'}; bs[b]={s:'ok'}; }
+  });
+  rec.lines.forEach((opts,li) => {
+    if (ls[li].s!=='missing') return;
+    const b = build.findIndex((it,bi) => bs[bi].s==='extra' && opts.some(o => o.i===it.i));
+    if (b>-1){ const o = opts.find(o=>o.i===build[b].i); ls[li]={s:'measure'}; bs[b]={s:'measure',want:showM(o.i,o.m)}; }
+  });
+  return {ls, bs, ok: ls.every(l=>l.s==='ok') && bs.every(b=>b.s==='ok')};
+}
+
+/* ---------- Storage ---------- */
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem('srd.'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('srd.'+k, JSON.stringify(v)); }catch(e){} }
+};
+const fmt = ms => { const s = ms/1000; if (s<60) return s.toFixed(1)+'s'; const m=Math.floor(s/60); return m+':'+(s-m*60).toFixed(1).padStart(4,'0'); };
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Theme ---------- */
+let night = store.get('night', false);
+function applyMode(){ document.documentElement.toggleAttribute('data-mode', night); if (night) document.documentElement.setAttribute('data-mode','night'); }
+const modeBtn = () => `<button class="mode" data-act="mode" aria-label="Switch to ${night?'bright':'night'} mode"><i></i>${night?'Bright':'Night'}</button>`;
+applyMode();
+
+/* ---------- State ---------- */
+const app = document.getElementById('app');
+let size = store.get('size',10);
+let mode = store.get('mode','build');
+/* Relax mode: no timer, no time limits, no time records. Accuracy only */
+let relax = store.get('relax', false);
+const applyRelax = () => document.documentElement.toggleAttribute('data-relax', relax);
+applyRelax();
+const QTYPES = ['build','base','sugar','citrus','garnish','glass','method','picture'];
+let custom = Object.assign({types:['base','glass','method'], ids:[...ALL]}, store.get('custom',{}));
+function customItems(){ return shuffle(custom.ids.flatMap(id=>custom.types.map(t=>id+':'+t))); }
+let round = null, cur = null, ticker = null, quitArm = 0, screen = 'home', toastT = 0;
+
+const MODES = {
+  build:  {n:'Full build',      d:'Every ingredient, timed',          k:'base'},
+  sugar:  {n:'Sugar only',      d:'How many ml of sugar?',            k:'sweet'},
+  citrus: {n:'Citrus only',     d:'Lime or lemon, and how much?',     k:'juice'},
+  garnish:{n:'Garnish only',    d:'Tap every garnish the drink gets', k:'gar'},
+  base:   {n:'Base only',       d:'Which base spirit(s)?',            k:'base'},
+  glass:  {n:'Glass only',      d:'Which glass is it served in?',     k:'sweet'},
+  method: {n:'Method only',     d:'Pick the right flow: shake, stir, build...', k:'juice'},
+  picture:{n:'Picture match',   d:'See the name, pick the drink by its look. Pictures reshuffle every game.', k:'liq'},
+  cards:  {n:'Playcards',       d:'Recall the spec, tap the card to flip and check. No timer.', k:'base'},
+  custom: {n:'Custom',          d:'Switch on the question types and cocktails you want', k:'gar'},
+  inf:    {n:'Infinity · beginner', d:'No score. Wrong taps flagged straight away. Any mistake, or slower than your time limit, and you make it again.', k:'liq'}
+};
+const rbKey = m => m==='build' ? 'roundBests' : 'rb.'+m;
+
+/* ---------- Practice log: kept 72 hours on this device ---------- */
+const LOG_TTL = 72*3600*1000;
+const TYPE_N = {build:'Full build', inf:'Infinity', sugar:'Sugar', citrus:'Citrus', garnish:'Garnish', base:'Base', glass:'Glass', method:'Method', picture:'Picture', cards:'Playcards'};
+function getLog(){ const now = Date.now(); return store.get('log',[]).filter(e=>now-e.t < LOG_TTL); }
+function addLog(e){ if (relax) e = Object.assign({}, e, {ms:0, relax:true}); const l = getLog(); l.push(Object.assign({t:Date.now()}, e)); store.set('log', l.slice(-2000)); }
+const ago = t => { const m = Math.round((Date.now()-t)/60000); return m<1?'just now':m<60?m+'m ago':Math.floor(m/60)+'h ago'; };
+function logStats(l){
+  const byDrink = {}, byType = {}, mistakes = {};
+  l.forEach(e=>{
+    const d = byDrink[e.id] ||= {n:0,wrong:0,ms:0,tn:0}; d.n++; if(!e.ok) d.wrong++; if (e.ms){ d.ms += e.ms; d.tn++; }
+    const ty = byType[e.type] ||= {n:0,wrong:0}; ty.n++; if(!e.ok) ty.wrong++;
+    (e.wrong||[]).forEach(w=>{ const k = REC[e.id].name+': '+w; mistakes[k]=(mistakes[k]||0)+1; });
+  });
+  return {byDrink, byType, mistakes};
+}
+function localSummary(l){
+  const {byDrink, byType, mistakes} = logStats(l);
+  const weak = Object.entries(byDrink).filter(([,d])=>d.wrong).sort((a,b)=>b[1].wrong/b[1].n - a[1].wrong/a[1].n || b[1].wrong-a[1].wrong).slice(0,3);
+  const avgMs = d => d.tn ? d.ms/d.tn : 0;
+  const slowest = Object.entries(byDrink).filter(([,d])=>d.tn).sort((a,b)=>avgMs(b[1]) - avgMs(a[1])).slice(0,3);
+  const types = Object.entries(byType).filter(([,t])=>t.wrong).sort((a,b)=>b[1].wrong/b[1].n - a[1].wrong/a[1].n);
+  const top = Object.entries(mistakes).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const out = [];
+  out.push('FOCUS DRINKS');
+  out.push(...(weak.length ? weak.map(([id,d])=>`- ${REC[id].name}: ${d.wrong} wrong out of ${d.n}`) : ['- No misses yet. Push your speed.']));
+  if (types.length){ out.push('', 'WEAKEST QUESTION TYPES'); out.push(...types.slice(0,3).map(([t,d])=>`- ${TYPE_N[t]}: ${Math.round(100*(d.n-d.wrong)/d.n)}% right`)); }
+  if (top.length){ out.push('', 'REPEAT MISTAKES'); out.push(...top.map(([k,n])=>`- ${k} (${n}x)`)); }
+  if (slowest.length){ out.push('', 'SLOWEST DRINKS'); out.push(...slowest.map(([id,d])=>`- ${REC[id].name}: ${fmt(avgMs(d))} average`)); }
+  if (weak.length){ out.push('', 'NEXT SESSION'); out.push(`- Run Infinity on ${weak.map(([id])=>REC[id].name).join(', ')} using Custom mode, then a timed Full build round.`); }
+  return out.join('\n');
+}
+async function genSummary(btn){
+  const l = getLog(), box = document.getElementById('sumout');
+  if (!l.length){ box.hidden=false; box.textContent='No results yet. Play a round first.'; return; }
+  box.hidden = false; btn.disabled = true;
+  let sample = null;
+  try { sample = window.claude?.use ? await window.claude.use('sample') : null; } catch(e){ sample = null; }
+  if (!sample){ box.textContent = localSummary(l); btn.disabled = false; return; }
+  const {byDrink, byType, mistakes} = logStats(l);
+  const weakIds = Object.entries(byDrink).filter(([,d])=>d.wrong).map(([id])=>id);
+  const data = {
+    answers: l.length,
+    byCocktail: Object.fromEntries(Object.entries(byDrink).map(([id,d])=>[REC[id].name,{tries:d.n,wrong:d.wrong,avgSec:d.tn?+(d.ms/d.tn/1000).toFixed(1):null}])),
+    byQuestionType: Object.fromEntries(Object.entries(byType).map(([t,d])=>[TYPE_N[t],{tries:d.n,wrong:d.wrong}])),
+    repeatMistakes: Object.entries(mistakes).sort((a,b)=>b[1]-a[1]).slice(0,15),
+    specsOfWeakDrinks: Object.fromEntries(weakIds.map(id=>[REC[id].name, REC[id].lines.map(o=>{const t=lineText(o);return t.n+' '+t.m;}).join(', ')+' | glass: '+GLASS_OF[id].map(g=>GLASS[g]).join(' or ')+' | method: '+mText(METHOD_OF[id]).join(' > ')]))
+  };
+  const prompt = `You are a head bartender coaching a bar manager who is memorising 21 house cocktail specs with a speed drill game. Below are his practice results from the last 72 hours as JSON.
+Write a short coaching summary for a phone screen. Use these plain-text section headings in capitals: FOCUS DRINKS, WEAKEST AREAS, MISTAKES TO FIX, NEXT SESSION PLAN.
+Under each, 2 to 4 short dash bullets. Name specific cocktails and quote the correct spec from specsOfWeakDrinks when fixing a mistake. Mention speed if average times are high.
+Rules: no markdown symbols other than dashes, no tables, no em dashes, under 170 words, encouraging but direct.
+DATA: ${JSON.stringify(data)}`;
+  box.textContent = 'Thinking...';
+  try {
+    const res = await sample(prompt, {onText:({text})=>{ box.textContent = text; }});
+    box.textContent = res.text || localSummary(l);
+  } catch(e){
+    box.textContent = (e && e.code==='not_granted' ? '' : 'AI summary unavailable right now. Here is the quick breakdown:\n\n') + localSummary(l);
+  }
+  btn.disabled = false;
+}
+
+/* ---------- Playcards: recall, tap to flip, self-check. No timer ---------- */
+let deckSt = null;
+function cardVars(id){
+  const P = PIC[id], base = P.g==='mug' ? '#c0743a' : P.grad ? P.grad[1] : P.c;
+  const [r,g,b] = [1,3,5].map(i=>parseInt(base.substr(i,2),16));
+  const light = (0.299*r+0.587*g+0.114*b)/255 > 0.72;
+  const bg = P.grad ? `linear-gradient(160deg,${P.grad[0]},${P.grad[1]})` : base;
+  return `--cbg:${bg};--cl:color-mix(in srgb,${base} ${light?'84%,#000':'72%,#fff'});--cr:${light?`color-mix(in srgb,${base} 62%,#000)`:base};--ct:color-mix(in srgb,${base} ${light?'48%':'88%'},#000)`;
+}
+function deck(){
+  screen='deck'; stopTick(); closeSheet();
+  if (!deckSt) deckSt = {order:[...ALL], marks:{}};
+  const m = deckSt.marks, done = Object.keys(m).length, knew = Object.values(m).filter(Boolean).length;
+  app.innerHTML = `
+  <div class="home gut"><div class="home-in" style="gap:14px">
+    <div class="hero">
+      <div><div class="eyebrow">No timer · recall, then flip</div><h2 class="dtitle">Playcards</h2></div>
+      <button class="ghost" data-act="home">Home</button>
+    </div>
+    <div class="dprog"><span><b>${done}</b>/21 flipped</span><span class="ok">${knew} knew it</span><span class="no">${done-knew} not yet</span></div>
+    <div class="btn2"><button class="primary" data-act="crand">Random card</button><button class="ghost" data-act="creset">Reset marks</button></div>
+    <div class="deckgrid">${deckSt.order.map(id=>`<button class="pcard ${id in m?(m[id]?'m-ok':'m-no'):''}" style="${cardVars(id)}" data-act="cpick" data-id="${id}">
+      <span class="pc-label ${Math.max(...REC[id].name.split(' ').map(w=>w.length))>=9?'sm':''}">${REC[id].name}</span>${id in m?`<span class="pc-mark">${m[id]?'✓':'✗'}</span>`:''}</button>`).join('')}</div>
+  </div></div>`;
+}
+function pickRandom(except){
+  const m = deckSt.marks, pool = ALL.filter(id=>id!==except);
+  const fresh = pool.filter(id=>!(id in m)), missed = pool.filter(id=>m[id]===false);
+  const from = fresh.length ? fresh : missed.length ? missed : pool;
+  return from[Math.floor(Math.random()*from.length)];
+}
+function cardSpec(id){
+  const r = REC[id];
+  return `<div class="pc-h"><span class="eyebrow">Spec</span><span class="pc-n">${r.name}</span></div>
+    <div class="pc-top">
+      <div class="pc-pic">${drinkSvg(id)}</div>
+      <div class="pc-lines">${r.lines.map(o=>{const t=lineText(o);return `<div class="pc-ln"><span class="sw2" style="--rc:${COL[o[0].i]}"></span><span>${t.n}</span><b>${t.m}</b></div>`}).join('')}</div>
+    </div>
+    <div class="pc-meta"><span>${glassSvg(GLASS_OF[id][0])}<b>${GLASS_OF[id].map(g=>GLASS[g]).join(' or ')}</b></span></div>
+    ${flowHTML(METHOD_OF[id],'div')}`;
+}
+function openCard(id, autoFlip){
+  closeSheet(); deckSt.cur = id;
+  const mk = deckSt.marks[id];
+  const s = document.createElement('div'); s.className='sheet csheet'; s.id='sheet';
+  s.innerHTML = `<div class="sheet-in">
+    <div class="phd"><span class="eyebrow">${autoFlip?'Checking':'Random card · recall first'}</span><button class="minibtn" data-act="cclose">Back to deck</button></div>
+    <div class="bigcard" id="bigcard" style="${cardVars(id)}"><div class="bc-in">
+      <button class="bc-face bc-front" data-act="cflip" aria-label="Flip card"><span class="pc-label big">${REC[id].name}</span><span class="bc-hint">Tap to flip</span></button>
+      <div class="bc-face bc-back">${cardSpec(id)}</div>
+    </div></div>
+    <div class="after" id="after" hidden>
+      <div class="btn2"><button class="ghost markbtn ${mk===true?'on-ok':''}" data-act="cmark" data-v="1">✓ Knew it</button><button class="ghost markbtn ${mk===false?'on-no':''}" data-act="cmark" data-v="0">✗ Not yet</button></div>
+      <button class="primary" data-act="crand">Next random card</button>
+    </div>
+  </div>`;
+  document.body.appendChild(s);
+  if (autoFlip) requestAnimationFrame(()=>requestAnimationFrame(flipCard));
+}
+function flipCard(){
+  const c = document.getElementById('bigcard'); if (!c || c.classList.contains('flipped')) return;
+  c.classList.add('flipped'); document.getElementById('after').hidden = false;
+}
+function markCard(ok){
+  const id = deckSt.cur; deckSt.marks[id] = ok;
+  addLog({type:'cards', id, ok, wrong: ok ? [] : ['not recalled on playcard']});
+  document.querySelectorAll('.markbtn').forEach(b=>b.classList.remove('on-ok','on-no'));
+  document.querySelector(`.markbtn[data-v="${ok?1:0}"]`).classList.add(ok?'on-ok':'on-no');
+  toast(ok ? 'Marked: knew it' : 'Marked: not yet. It comes back sooner on Random', ok?'good':'info', 1100);
+}
+
+/* ---------- Records: fastest correct build per cocktail + best round per mode ---------- */
+const NEW_FOR = 24*3600*1000;
+function setBest(id, ms){
+  const b = store.get('bests',{}), at = store.get('bestsAt',{}), prev = b[id];
+  if (prev && ms >= prev) return null;
+  b[id] = ms; at[id] = Date.now(); store.set('bests',b); store.set('bestsAt',at);
+  return prev ? {prev} : {first:true};
+}
+function recordsCard(){
+  const b = store.get('bests',{}), at = store.get('bestsAt',{}), now = Date.now();
+  const list = Object.entries(b).filter(([id])=>REC[id]).sort((x,y)=>x[1]-y[1]);
+  const isNew = id => at[id] && now-at[id] < NEW_FOR;
+  const row = ([id,ms],k) => `<div class="row"><span><span class="rank">${k+1}</span>${REC[id].name}${isNew(id)?' <span class="badge nr">New record</span>':''}</span><span class="r">${fmt(ms)}</span></div>`;
+  const rmode = (mode==='inf') ? 'build' : mode, rb = store.get(rbKey(rmode),{}), rbAt = store.get('rbAt.'+rmode,{});
+  const sizes = [5,10,15,21].filter(n=>rb[n]).sort((a,c)=>a-c);
+  return `<div class="card rec">
+    <div class="phd"><span class="eyebrow">Records · fastest correct builds</span><span class="muted small">${list.length}/21</span></div>
+    ${list.length ? `<div class="rows">${list.slice(0,5).map(row).join('')}</div>
+      ${list.length>5?`<details class="more"><summary>Show all ${list.length}</summary><div class="rows">${list.slice(5).map((e,k)=>row(e,k+5)).join('')}</div></details>`:''}`
+      : `<p class="muted small" style="margin:8px 0 0">Get a drink fully right in Full build or a clean Infinity run to set your first record.</p>`}
+    ${sizes.length?`<div class="eyebrow" style="margin-top:14px">Best rounds · ${MODES[rmode].n}</div>
+      <div class="rows">${sizes.map(n=>`<div class="row"><span>${n===21?'All 21':n+(rmode==='custom'?' questions':' drinks')}${rbAt[n]&&now-rbAt[n]<NEW_FOR?' <span class="badge nr">New record</span>':''}</span><span class="r">${fmt(rb[n])}</span></div>`).join('')}</div>`:''}
+  </div>`;
+}
+
+function toast(msg, kind='info', ms=1600){
+  document.getElementById('toast')?.remove(); clearTimeout(toastT);
+  const t = document.createElement('div'); t.id='toast'; t.className='toast '+kind; t.setAttribute('role','status'); t.textContent=msg;
+  document.body.appendChild(t); toastT = setTimeout(()=>t.remove(), ms);
+}
+function nope(el){ if(!el) return; el.classList.remove('nope'); void el.offsetWidth; el.classList.add('nope'); setTimeout(()=>el.classList.remove('nope'),400); }
+
+/* ---------- Home ---------- */
+function home(){
+  screen='home'; stopTick();
+  const rb = store.get(rbKey(mode),{}), hist = store.get('history',[]).filter(h=>(h.mode||'build')===mode);
+  const sizes = [[5,'base'],[10,'liq'],[15,'juice'],[21,'sweet']];
+  const isInf = mode==='inf', isCards = mode==='cards';
+  app.innerHTML = `
+  <div class="home gut"><div class="home-in">
+    <div>
+      <div class="hero">
+        <div><div class="eyebrow">Bar spec memory drill</div>
+        <h1><span class="a">Speed</span><br><span class="b">Rail</span></h1></div>
+        ${modeBtn()}
+      </div>
+      <div class="stripe">${PAGES.map(p=>`<i style="background:var(--c-${p.k})"></i>`).join('')}</div>
+      <p class="lede">Build each drink from memory, on the clock. 21 house specs, buttons only.</p>
+    </div>
+    ${recordsCard()}
+    <div class="card">
+      <button class="relaxtog" data-act="relax" aria-pressed="${relax}"><span class="track"><i></i></span><span class="rl"><b>Relax mode ${relax?'on':'off'}</b><small>${relax?'Timer off. No time limits. Accuracy only.':'Switch the timer off and focus on accuracy'}</small></span></button>
+      <div class="eyebrow" style="margin-top:16px">Game mode</div>
+      <div class="modes">${Object.entries(MODES).map(([m,o])=>`<button class="modebtn ${m==='inf'?'wide2':''}" style="${tint(o.k)}" data-act="mode-pick" data-m="${m}" aria-pressed="${m===mode}"><b>${o.n}</b><span>${o.d}</span></button>`).join('')}</div>
+      ${isInf&&relax?`<p class="relaxnote">Relax mode is on, so time limits are paused. Only a mistake repeats a drink.</p>`:''}
+      ${isInf&&!relax?`<div class="eyebrow" style="margin-top:16px">Time limit</div>
+      <div class="rows">${stepper('small','Normal drinks','4 ingredients or fewer')}${stepper('big','Big drinks','5 or more ingredients')}</div>
+      <button class="next" data-act="limreset" style="margin-top:6px">Reset to 12s / 30s</button>`:''}
+      ${mode==='custom'?`<div class="eyebrow" style="margin-top:16px">Question types</div>
+      <div class="chips">${QTYPES.map(t=>`<button class="tog" data-act="ctype" data-t="${t}" aria-pressed="${custom.types.includes(t)}">${MODES[t].n.replace(' only','')}</button>`).join('')}</div>
+      <div class="phd" style="margin-top:16px"><span class="eyebrow">Cocktails (${custom.ids.length}/21)</span>
+        <span style="display:flex;gap:6px"><button class="minibtn" data-act="call" data-v="all">All</button><button class="minibtn" data-act="call" data-v="none">None</button></span></div>
+      <div class="chips" style="margin-top:8px">${ALL.map(i=>`<button class="tog" data-act="cid" data-i="${i}" aria-pressed="${custom.ids.includes(i)}">${REC[i].name}</button>`).join('')}</div>
+      <p class="muted small" style="margin:10px 0 0">${custom.ids.length*custom.types.length} possible questions. Each round picks at random from these.</p>`:''}
+      ${isInf||isCards?'':`<div class="eyebrow" style="margin-top:16px">${mode==='custom'?'Questions':'Drinks'} this round</div>
+      <div class="seg">${sizes.map(([n,k])=>`<button style="${tint(k)}" data-act="size" data-n="${n}" aria-pressed="${n===size}">${n===21?'All':n}<small>${n===21?'21 drinks':'drinks'}</small></button>`).join('')}</div>`}
+      <div style="margin-top:14px"><button class="primary" data-act="start">${isCards?'Open the deck':isInf?'Start practising':'Start round'}</button></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px">How a drink works</div>
+      <ol class="steps">
+        <li><span class="n" style="background:var(--c-base)">1</span><span>Swipe the colour panels left and right. Tap an ingredient, the panel flips, tap the <b>measure</b>.</span></li>
+        <li><span class="n" style="background:var(--c-liq)">2</span><span>Everything lands in the glass at the top, under the cocktail name.</span></li>
+        <li><span class="n" style="background:var(--c-sweet)">3</span><span>Hit <b>Submit</b>. Mistakes get a red line through them with the right answer in red.</span></li>
+      </ol>
+    </div>
+    ${hist.length&&!isInf?`<div class="card">
+      <div class="eyebrow" style="margin-bottom:4px">Recent rounds · ${MODES[mode].n}</div>
+      <div class="rows">${hist.slice(0,6).map(h=>`<div class="row"><span>${h.n} drinks <span class="muted small">· ${h.score}/${h.n} first time</span></span><span class="r">${fmt(h.total)}</span></div>`).join('')}</div>
+    </div>`:''}
+    ${(()=>{ const l=getLog(); store.set('log',l); const ok=l.filter(e=>e.ok).length;
+      return `<div class="card">
+      <div class="phd"><span class="eyebrow">Practice log · last 72 hours</span><span class="muted small">${l.length} answers</span></div>
+      ${l.length?`<div class="logstat"><b>${Math.round(100*ok/l.length)}%</b> right · ${new Set(l.map(e=>e.id)).size} cocktails practised</div>
+      <div class="rows logrows">${l.slice(-25).reverse().map(e=>`<div class="row"><span><span class="ic ${e.ok?'ok':'no'}">${e.ok?'✓':'✗'}</span>${REC[e.id].name} <span class="muted small">· ${TYPE_N[e.type]}${e.wrong&&e.wrong.length?' · '+e.wrong.slice(0,2).join(', '):''}</span></span><span class="r small">${e.ms?fmt(e.ms)+' · ':''}${ago(e.t)}</span></div>`).join('')}</div>`
+      :`<p class="muted small" style="margin:8px 0 0">Every answer you give lands here and is wiped after 72 hours.</p>`}
+      <button class="primary" style="margin-top:12px" data-act="summary">Generate summary</button>
+      <div class="sumout" id="sumout" hidden></div>
+    </div>`; })()}
+    <details class="card">
+      <summary>Spec sheet (revise)</summary>
+      <div style="margin-top:8px">${ALL.map(id=>{const r=REC[id];return `<div class="spec"><h3>${r.name}</h3>${r.lines.map(o=>{const t=lineText(o);return `<div><span>${t.n}</span><span>${t.m}</span></div>`}).join('')}</div>`}).join('')}</div>
+    </details>
+  </div></div>`;
+}
+
+/* ---------- Round ---------- */
+let prevId = null;
+let limits = Object.assign({small:12, big:30}, store.get('limits',{}));
+const infLimit = id => (REC[id].lines.length > 4 ? limits.big : limits.small) * 1000;
+const stepper = (key, label, sub) => `<div class="row"><span><b>${label}</b><br><span class="muted small">${sub}</span></span>
+  <span class="stepper"><button data-act="lim" data-k="${key}" data-d="-1" aria-label="Less time">−</button><b>${limits[key]}s</b><button data-act="lim" data-k="${key}" data-d="1" aria-label="More time">+</button></span></div>`;
+function startNew(n){ startRound(mode==='custom' ? customItems().slice(0,n) : shuffle(ALL).slice(0,n)); }
+function startRound(ids){
+  round = {ids, idx:0, results:[], total:0, mode, picOrder:shuffle(ALL)}; cur = null; prevId = null;
+  if (mode==='inf'){ round.count=0; nextInf(); } else nextCocktail();
+}
+const prevBtn = () => prevId ? `<button class="prevbtn" data-act="prev">← Last drink: <b>${REC[prevId].name}</b></button>` : '';
+function showPrev(){
+  if (!prevId) return;
+  const r = REC[prevId], s = document.createElement('div'); s.className='sheet'; s.id='sheet';
+  s.innerHTML = `<div class="sheet-in">
+    <div class="eyebrow">Last drink · correct spec</div>
+    <div class="cname">${r.name}</div>
+    <div class="card">${r.lines.map(o=>{const t=lineText(o);return `<div class="ans" style="${tint(ING[o[0].i].p)}"><b>${t.n}</b> <span class="m" style="color:var(--c)">${t.m}</span></div>`}).join('')}</div>
+    <button class="primary" data-act="closeprev">Back to ${REC[cur.id].name}</button>
+  </div>`;
+  document.body.appendChild(s);
+}
+function nextCocktail(){
+  prevId = round.idx ? round.ids[round.idx-1].split(':')[0] : null;
+  const key = round.ids[round.idx], [id, t] = key.split(':');
+  cur = {id, key, type: t || round.mode, build:[], page:0, pending:null, t0:performance.now(), attempts:1, spent:0, stopped:false, firstOk:null, picks:new Set()};
+  if (cur.type==='build') play(); else drill();
+}
+function nextInf(sameId){
+  const prev = cur?.id || null;
+  let id = sameId;
+  if (!id) do { id = ALL[Math.floor(Math.random()*ALL.length)]; } while (id===prev);
+  if (prev && prev !== id) prevId = prev;
+  round.count++;
+  cur = {id, build:[], page:0, pending:null, inf:true, done:false, t0:performance.now(), stopped:false, spent:0, mistakes:0, wrongs:[], again:!!sameId};
+  play();
+}
+function elapsed(){ return cur.stopped ? cur.last : performance.now()-cur.t0; }
+
+function play(){
+  screen='play';
+  const r = REC[cur.id], n = round.ids.length, inf = !!cur.inf;
+  cur.phase = cur.phase || 'base';
+  const meta = inf
+    ? `${cur.again?'<span class="again">Again</span> · ':''}Drink ${round.count}`
+    : `Drink ${round.idx+1} of ${n}<span class="rtotw"> · Round <b id="rtot">0.0s</b></span>`;
+  app.innerHTML = `
+  <div class="pl">
+    <div class="band"><div class="band-in gut">
+      <button class="bandbtn" data-act="quit" id="quit">${inf?'Exit':'Quit'}</button>
+      <div class="bname">
+        <div class="bmeta">${meta}${prevId?` · <button class="lastlink" data-act="prev">Last: ${REC[prevId].name}</button>`:''}</div>
+        <div class="cname2">${r.name}</div>
+      </div>
+      <div class="btmr"><span id="tmr">0.0s</span>${inf?`<small>target ${infLimit(cur.id)/1000}s</small>`:''}</div><span class="relaxpill">Relax</span>
+    </div>${inf?'':`<div class="bar flat"><i style="width:${(round.idx/n)*100}%"></i></div>`}</div>
+    <div class="gut" style="padding-top:8px"><div class="tray" id="glass"></div></div>
+    <div class="work gut">
+      <div class="ipanel" id="ipanel"></div>
+      <div class="ladder" id="ladder"></div>
+    </div>
+    ${inf?'':`<div class="gut" style="padding-bottom:10px"><button class="primary" id="submit" data-act="submit">Submit</button></div>`}
+  </div>`;
+  drawPanel(); drawLadder(); drawGlass(); startTick();
+}
+
+function drawPanel(){
+  const p = document.getElementById('ipanel'); if(!p) return;
+  const used = new Set(cur.build.map(b=>b.i));
+  const btn = id => `<button class="ing2 ${used.has(id)?'added':''} ${cur.pending===id?'sel':''}" style="--rc:${COL[id]}" data-act="pick" data-id="${id}"><span class="sw ${ING[id].p==='gar'?'gar':''}"></span><span>${ING[id].n}</span></button>`;
+  if (cur.phase==='base'){
+    const ids = Object.keys(ING).filter(k=>ING[k].p==='base');
+    p.innerHTML = `<div class="phd"><span class="eyebrow">Base spirit</span><button class="minibtn" data-act="phase" data-p="all">Mixers & garnish →</button></div>
+      <div class="g3 gbase">${ids.map(btn).join('')}</div>`;
+  } else {
+    const secs = [['liq','Liqueurs & vermouth'],['juice','Juice & fresh'],['sweet','Sweet, soda & bitters'],['gar','Garnish']];
+    p.innerHTML = `<div class="phd"><span class="eyebrow">Mixers & garnish</span><button class="minibtn" data-act="phase" data-p="base">← Base</button></div>
+      <div class="g3 gall">${secs.map(([k,l])=>`<div class="sec">${l}</div>`+Object.keys(ING).filter(i=>ING[i].p===k).map(btn).join('')).join('')}</div>`;
+  }
+}
+
+function drawLadder(){
+  const l = document.getElementById('ladder'); if(!l) return;
+  const id = cur.pending, opts = MEAS[id ? ING[id].t : 'liquid'];
+  l.className = 'ladder' + (id ? '' : ' off');
+  l.setAttribute('style', tint(id ? ING[id].p : 'base'));
+  const lbl = m => id && ING[id].t==='count' ? '×'+m : m;
+  l.innerHTML = (cur.inf ? `<button class="ansbtn" data-act="answer">Show answer</button>` : '')
+    + opts.map(m=>`<button class="lb" data-act="meas" data-m="${m}">${lbl(m)}</button>`).join('');
+}
+
+function drawGlass(){
+  const g = document.getElementById('glass'); if(!g) return;
+  g.innerHTML = cur.build.length
+    ? cur.build.map((b,k)=>`<span class="chip sm" style="${tint(ING[b.i].p)}">${ING[b.i].n} <em>${showM(b.i,b.m)}</em><button data-act="rm" data-k="${k}" aria-label="Remove ${ING[b.i].n}">×</button></span>`).join('')
+    : `<span class="empty">Tap an ingredient, then its measure on the right.</span>`;
+  g.scrollTop = g.scrollHeight;
+  const s = document.getElementById('submit'); if (s) s.disabled = !cur.build.length;
+}
+
+/* ---------- Infinity: check each tap straight away ---------- */
+function infMissing(){ const r = REC[cur.id], res = check(r, cur.build); return r.lines.filter((o,li)=>res.ls[li].s!=='ok'); }
+function infPick(id, btn){
+  const r = REC[cur.id], miss = infMissing();
+  if (!miss.some(o=>o.some(x=>x.i===id))){
+    nope(btn); cur.mistakes++; cur.wrongs.push(`tapped ${ING[id].n}`);
+    toast(cur.build.some(b=>b.i===id) || r.lines.some(o=>o.some(x=>x.i===id)) ? `${ING[id].n} is already in` : `No ${ING[id].n} in ${r.name}`, 'bad');
+    return false;
+  }
+  return true;
+}
+function infMeasure(m, btn){
+  const ok = infMissing().some(o=>o.some(x=>x.i===cur.pending && x.m===m));
+  if (!ok){ nope(btn); cur.mistakes++; cur.wrongs.push(`${ING[cur.pending].n} ${showM(cur.pending,m)} wrong measure`); toast(`Not ${showM(cur.pending,m)}. Try another measure`, 'bad'); }
+  return ok;
+}
+function infAfterAdd(){
+  if (cur.done || infMissing().length) return;
+  cur.done = true; cur.last = performance.now()-cur.t0; cur.stopped = true;
+  const slow = !relax && cur.last > infLimit(cur.id), repeat = cur.mistakes>0 || slow, name = REC[cur.id].name, id = cur.id;
+  const why = [cur.mistakes ? `${cur.mistakes} mistake${cur.mistakes>1?'s':''}` : '', slow ? `over ${infLimit(id)/1000}s` : ''].filter(Boolean).join(', ');
+  addLog({type:'inf', id, ok:!repeat, ms:cur.last, wrong:[...cur.wrongs, ...(slow?[`over ${infLimit(id)/1000}s target`]:[])]});
+  if (repeat){ infResult(why); return; }
+  const rec = relax ? null : setBest(id, cur.last);
+  if (relax) toast(`Perfect ${name}!`, 'good', 1300); else toast(rec && rec.prev ? `NEW RECORD! ${name} ${fmt(cur.last)} (was ${fmt(rec.prev)})` : `Perfect ${name}! ${fmt(cur.last)}${rec?' · first record':''}`, 'good', rec&&rec.prev?1800:1300);
+  setTimeout(()=>{ if (screen==='play' && cur?.inf && cur.done && cur.id===id) nextInf(); }, 1300);
+}
+function infResult(why){
+  const r = REC[cur.id], s = document.createElement('div'); s.className='sheet'; s.id='sheet';
+  s.innerHTML = `<div class="sheet-in">
+    <div class="eyebrow">${r.name}</div>
+    <div class="verdict no"><div><div class="v">Not quite</div><div style="font-weight:700;margin-top:4px">${why}</div></div>
+      <div class="t"><small>Time</small>${fmt(cur.last)}</div></div>
+    <div class="eyebrow">Correct spec</div>
+    <div class="card">${r.lines.map(o=>{const t=lineText(o);return `<div class="ans"><span class="sw2" style="--rc:${COL[o[0].i]}"></span><b>${t.n}</b> <span class="m">${t.m}</span></div>`}).join('')}</div>
+    <div class="btnrow"><button class="ghost" data-act="infnext">Next drink</button><button class="primary" data-act="restart">Restart same</button></div>
+  </div>`;
+  document.body.appendChild(s);
+}
+function showAnswer(){
+  if (!cur?.inf || cur.done) return;
+  const r = REC[cur.id], have = new Set(cur.build.map(b=>b.i)), s = document.createElement('div'); s.className='sheet'; s.id='sheet';
+  s.innerHTML = `<div class="sheet-in">
+    <div class="eyebrow">Correct spec</div>
+    <div class="cname">${r.name}</div>
+    <div class="card">${r.lines.map(o=>{const t=lineText(o), got=o.some(x=>have.has(x.i));return `<div class="ans"><span class="sw2" style="--rc:${COL[o[0].i]}"></span>${got?'<span class="tick">✓</span>':''}<b>${t.n}</b> <span class="m" style="color:var(--c)">${t.m}</span></div>`}).join('')}</div>
+    <p class="muted small" style="margin:0">Study it, then rebuild it from memory. The clock starts fresh.</p>
+    <div class="btnrow"><button class="ghost" data-act="closeprev">Back</button><button class="primary" data-act="restart">Restart this drink</button></div>
+  </div>`;
+  document.body.appendChild(s);
+}
+function infHint(){
+  const m = infMissing()[0]; if (!m) return;
+  cur.mistakes++; cur.wrongs.push('used hint');
+  const t = lineText(m); toast(`Next: ${t.n}${t.m?' · '+t.m:''}`, 'info', 2400);
+}
+
+/* ---------- Quick drills: sugar, citrus, garnish ---------- */
+/* Every accepted set of answers for a tap-all question. Mai Tai: the dark rum float is optional as a base spirit */
+const OPTIONAL_PICK = {mai_tai:['dark_rum']};
+function combosOf(r, part){
+  const all = r.lines.filter(o=>o.every(x=>ING[x.i].p===part));
+  const sets = [all];
+  if (OPTIONAL_PICK[r.id]) sets.push(all.filter(o=>!o.some(x=>OPTIONAL_PICK[r.id].includes(x.i))));
+  return [...new Set(sets.flatMap(ls=>{ let c=[[]]; ls.map(o=>[...new Set(o.map(x=>x.i))]).forEach(opts=>{ c = c.flatMap(x=>opts.map(i=>[...x,i])); }); return c.map(x=>[...x].sort().join(',')); }))];
+}
+const DRILL = {
+  sugar:  {q:'How much sugar?', k:'sweet', one:['None','5ml','10ml','15ml','20ml','25ml','1 cube'],
+           ans:r=>{ const v=[]; r.lines.forEach(o=>o.forEach(x=>{ if(x.i==='sugar') v.push(x.m); if(x.i==='sugar_cube') v.push('1 cube'); })); return v.length?v:['None']; }},
+  citrus: {q:'Lime or lemon? How much?', k:'juice', items:['lime','lemon'], noneLbl:'No citrus', meas:['5ml','10ml','15ml','20ml','25ml','30ml'],
+           ans:r=>{ const v=[]; r.lines.forEach(o=>o.forEach(x=>{ if(x.i==='lime'||x.i==='lemon') v.push(x.i+'@'+x.m); })); return v.length?v:['none@']; }},
+  garnish:{q:'Which garnish? Tap all, then Check', k:'gar', multi:true, items:Object.keys(ING).filter(k=>ING[k].p==='gar'), ans:r=>combosOf(r,'gar')},
+  base:   {q:'Which base spirit(s)?', k:'base', multi:true, items:Object.keys(ING).filter(k=>ING[k].p==='base'), ans:r=>combosOf(r,'base')},
+  glass:  {q:'Which glass?', k:'sweet', glasses:true, one:Object.keys(GLASS), lbl:v=>GLASS[v], ans:r=>GLASS_OF[r.id]},
+  method: {q:'Pick the method', k:'juice', flows:true, ans:r=>[METHOD_OF[r.id]]},
+  picture:{q:'Which one is it?', k:'liq', pics:true, ans:r=>[r.id]}
+};
+const ansText = (mode, a) => {
+  if (mode==='base' || mode==='garnish') return a ? a.split(',').map(i=>ING[i].n+(i==='coffee_beans'?' ×3':'')).join(' + ') : 'Nothing picked';
+  if (mode==='glass') return GLASS[a];
+  if (mode==='picture') return REC[a].name;
+  if (mode==='method') return mText(a).join(' → ');
+  if (mode==='sugar') return a==='None' ? 'No sugar' : a==='1 cube' ? 'Sugar cube ×1' : 'Sugar syrup '+a;
+  const [i,m] = a.split('@'); return i==='none' ? DRILL[mode].noneLbl : ING[i].n+(m?' '+showM(i,m):'');
+};
+
+function drill(){
+  screen='drill';
+  const D = DRILL[cur.type], r = REC[cur.id], n = round.ids.length;
+  const front = D.pics
+    ? round.picOrder.map((id,k)=>`<button class="pbtn" data-act="dans" data-v="${id}" aria-label="Drink option ${k+1}">${drinkSvg(id)}</button>`).join('')
+    : D.flows
+    ? `<div class="legend"><span class="k-prep">${svgI('tin')}Prep</span><span class="k-act">${svgI('shake')}Action</span><span class="k-strain">${svgI('strain')}Strain</span><span class="k-fin">${svgI('up')}Finish</span></div>` + Object.keys(METHOD).map(k=>flowHTML(k)).join('')
+    : D.multi
+    ? D.items.map(i=>`<button class="ing2" style="--rc:${COL[i]}" data-act="dtog" data-i="${i}"><span class="sw ${ING[i].p==='gar'?'gar':''}"></span><span>${ING[i].n}</span></button>`).join('')
+    : D.one
+    ? D.glasses ? D.one.map(v=>`<button class="gbtn" data-act="dans" data-v="${v}">${glassSvg(v)}<b>${GLASS[v]}</b></button>`).join('')
+    : D.one.map(v=>`<button class="ing" data-act="dans" data-v="${v}">${D.lbl?D.lbl(v):(v==='None'?'No sugar':v)}</button>`).join('')
+    : D.items.map(i=>`<button class="ing" data-act="ditem" data-i="${i}">${ING[i].n}</button>`).join('') + `<button class="ing" data-act="dans" data-v="none@">${D.noneLbl}</button>`;
+  app.innerHTML = `
+  <div class="play gut">
+    <div class="upper">
+      <div class="top">
+        <button class="ghost" data-act="quit" id="quit">Quit</button>
+        <div class="prog">
+          <div class="lbl"><span>${MODES[cur.type].n} · ${round.idx+1} of ${n}</span><span class="rtotw">Round <b id="rtot">0.0s</b></span></div>
+          <div class="bar"><i style="width:${(round.idx/n)*100}%"></i></div>
+        </div>
+        ${modeBtn()}
+      </div>
+      <div class="namerow">
+        <div class="nm"><div class="eyebrow">For a</div><div class="cname">${r.name}</div></div>
+        <div class="tmr" id="tmr">0.0s</div><span class="relaxpill">Relax</span>
+      </div>
+      ${prevBtn()}
+      <div class="qa" id="qa" style="${tint(D.k)}"><div class="qtext">${D.q}</div></div>
+    </div>
+    <div class="lower">
+      <div class="deck" id="deck">
+        <div class="front" id="front"><div class="page" style="${tint(D.k)}"><div class="${D.pics?'pgrid':D.flows?'flows':D.glasses?'ggrid':D.multi?'grid g3 gbase':'grid'}">${front}</div></div></div>
+        <div class="back" id="back" hidden></div>
+      </div>
+      ${D.multi?`<button class="primary" id="dcheck" data-act="dcheck" disabled>Check</button>`:''}
+    </div>
+  </div>`;
+  startTick();
+}
+function drillItem(i){
+  const D = DRILL[cur.type];
+  if (ING[i].t==='rim'){ drillAnswer(i+'@Rim'); return; }
+  cur.pending = i;
+  const b = document.getElementById('back'); b.setAttribute('style', tint(D.k));
+  b.innerHTML = `<div class="hd"><div><div class="eyebrow">How much${ING[i].t==='count'?' (pieces)':''}?</div><div class="howmuch">${ING[i].n}</div></div>
+    <button class="backbtn" data-act="unflip">← Back</button></div>
+    <div class="mgrid">${D.meas.map(m=>`<button class="mbtn" data-act="dans" data-v="${i}@${m}">${m}</button>`).join('')}</div>`;
+  flip(true);
+}
+function drillAnswer(v){
+  if (cur.stopped) return;
+  cur.last = performance.now()-cur.t0; cur.stopped = true; cur.spent = cur.last;
+  const correct = DRILL[cur.type].ans(REC[cur.id]), ok = correct.includes(v);
+  cur.firstOk = ok;
+  document.getElementById('deck').hidden = true;
+  const right = correct.map(a=>ansText(cur.type,a)).join(' or ');
+  addLog({type:cur.type, id:cur.id, ok, ms:cur.last, wrong: ok ? [] : [`picked ${ansText(cur.type,v)}, correct ${right}`]});
+  const last = round.idx === round.ids.length-1;
+  document.getElementById('qa').innerHTML = ok
+    ? `<div class="fb ok"><div class="v">Spot on</div><div><b>${ansText(cur.type,v)}</b>${relax?'':' · '+fmt(cur.last)}</div>${cur.type==='glass'?`<div class="gans"><span class="gbtn ok">${glassSvg(v)}<b>${GLASS[v]}</b></span></div>`:''}${cur.type==='picture'?`<div class="gans"><span class="pans ok">${drinkSvg(v)}<b>${REC[v].name}</b></span></div>`:''}</div>`
+    : `<div class="fb no"><div class="v">Not quite</div>
+        <div>You: <s><b>${ansText(cur.type,v)}</b></s></div>
+        <div class="fix">Correct: ${cur.type==='method'?'':right}</div>${cur.type==='method'?flowHTML(correct[0],'div'):''}${cur.type==='glass'?`<div class="gans">${correct.map(g=>`<span class="gbtn ok">${glassSvg(g)}<b>${GLASS[g]}</b></span>`).join('')}<span class="gbtn no">${glassSvg(v)}<b><s>${GLASS[v]}</s></b></span></div>`:''}${cur.type==='picture'?`<div class="gans"><span class="pans ok">${drinkSvg(correct[0])}<b>${REC[correct[0]].name}</b><small>Correct</small></span><span class="pans no">${drinkSvg(v)}<b><s>${REC[v].name}</s></b><small>You picked</small></span></div>`:''}</div>
+       <button class="primary" data-act="advance">${last?'Finish round':'Next drink →'}</button>`;
+  if (ok) setTimeout(()=>{ if (screen==='drill' && cur.stopped) advance(); }, 800);
+}
+
+/* Flip: rotate out, swap faces, rotate back in */
+function flip(toBack){
+  const deck = document.getElementById('deck'), front = document.getElementById('front'), back = document.getElementById('back');
+  const swap = () => { back.hidden = !toBack; front.classList.toggle('away', toBack); };
+  if (reduced()){ swap(); return; }
+  deck.classList.add('out');
+  setTimeout(() => { swap(); deck.classList.remove('out'); }, 170);
+}
+function drawBack(){
+  const id = cur.pending, opts = MEAS[ING[id].t];
+  const unit = ING[id].t==='leaf' ? ' (leaves)' : ING[id].t==='count' ? ' (pieces)' : '';
+  const b = document.getElementById('back');
+  b.setAttribute('style', tint(ING[id].p));
+  b.innerHTML = `
+    <div class="hd"><div><div class="eyebrow">How much${unit}?</div><div class="howmuch">${ING[id].n}</div></div>
+      <button class="backbtn" data-act="unflip">← Back</button></div>
+    <div class="mgrid">${opts.map(m=>`<button class="mbtn ${m.length>7?'wide':''}" data-act="meas" data-m="${m}">${m}</button>`).join('')}</div>`;
+}
+
+function add(i,m){
+  cur.build.push({i,m}); cur.pending=null;
+  if (ING[i].p==='base' && cur.build.filter(b=>ING[b.i].p==='base').length===1) cur.phase='all';
+  drawPanel(); drawLadder(); drawGlass();
+}
+
+function startTick(){ clearInterval(ticker); ticker = setInterval(()=>{
+  const t = document.getElementById('tmr'), rt = document.getElementById('rtot');
+  if (!t || !cur) return;
+  const e = elapsed(); t.textContent = fmt(e);
+  if (cur.inf) t.style.color = e > infLimit(cur.id) ? 'var(--bad)' : '';
+  if (rt) rt.textContent = fmt(round.total + cur.spent + (cur.stopped?0:e));
+},100); }
+function stopTick(){ clearInterval(ticker); ticker=null; }
+
+/* ---------- Submit + result ---------- */
+function submit(){
+  cur.last = performance.now()-cur.t0; cur.stopped = true; cur.spent += cur.last;
+  const r = REC[cur.id], res = check(r, cur.build);
+  if (cur.firstOk===null) cur.firstOk = res.ok;
+  addLog({type:'build', id:cur.id, ok:res.ok, ms:cur.last, wrong:[
+    ...cur.build.map((b,k)=>{const x=res.bs[k]; return x.s==='measure'?`${ING[b.i].n} ${showM(b.i,b.m)} (should be ${x.want})`:x.s==='extra'?`added ${ING[b.i].n}`:null;}).filter(Boolean),
+    ...r.lines.map((o,li)=>res.ls[li].s==='missing'?`missed ${lineText(o).n}`:null).filter(Boolean)]});
+  let best = false;
+  if (res.ok && !relax) best = setBest(cur.id, cur.last);
+  const last = round.idx === round.ids.length-1;
+
+  const yours = cur.build.map((b,k)=>{
+    const s = res.bs[k], nm = ING[b.i].n, m = showM(b.i,b.m);
+    if (s.s==='ok') return `<div class="ans"><span class="tick">✓</span><b>${nm}</b> <span class="m">${m}</span></div>`;
+    if (s.s==='measure') return `<div class="ans"><b>${nm}</b> <s class="m">${m}</s> <span class="fix"><span class="m">${s.want}</span></span></div>`;
+    return `<div class="ans"><s><b>${nm}</b> <span class="m">${m}</span></s> <span class="fix">not in spec</span></div>`;
+  });
+  r.lines.forEach((o,li)=>{ if (res.ls[li].s==='missing'){ const t=lineText(o); yours.push(`<div class="ans fix">+ <b>${t.n}</b> <span class="m">${t.m}</span></div>`); } });
+
+  const sheet = document.createElement('div'); sheet.className='sheet'; sheet.id='sheet';
+  sheet.innerHTML = `<div class="sheet-in">
+    <div class="eyebrow">${r.name} · attempt ${cur.attempts}</div>
+    <div class="verdict ${res.ok?'ok':'no'}">
+      <div><div class="v">${res.ok?'Spot on':'Not quite'}</div>${best?`<span class="badge">${best.first?'First record set':'New record! was '+fmt(best.prev)}</span>`:''}</div>
+      <div class="t"><small>This attempt</small>${fmt(cur.last)}</div>
+    </div>
+    <div class="cols">
+      <div class="col"><h4>Your answer</h4>${yours.join('') || '<div class="ans muted">Nothing added</div>'}</div>
+      <div class="col"><h4>Correct spec</h4>${r.lines.map(o=>{const t=lineText(o);return `<div class="ans"><b>${t.n}</b> <span class="m">${t.m}</span></div>`}).join('')}</div>
+    </div>
+    <div class="btnrow">
+      <button class="ghost" data-act="retry">Retry</button>
+      <button class="primary" data-act="advance">${last?'Finish round':'Next drink →'}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(sheet);
+}
+function closeSheet(){ document.getElementById('sheet')?.remove(); }
+
+function retry(){
+  closeSheet(); cur.attempts++; cur.build=[]; cur.pending=null; cur.stopped=false; cur.t0=performance.now();
+  cur.phase='base'; drawPanel(); drawLadder(); drawGlass();
+}
+function advance(){
+  closeSheet();
+  round.results.push({id:cur.id, key:cur.key, type:cur.type, time:cur.spent, firstOk:cur.firstOk, attempts:cur.attempts});
+  round.total += cur.spent; round.idx++;
+  if (round.idx < round.ids.length) nextCocktail(); else finish();
+}
+
+/* ---------- End of round ---------- */
+function finish(){
+  screen='end'; stopTick();
+  const n = round.ids.length, score = round.results.filter(r=>r.firstOk).length;
+  const rb = store.get(rbKey(round.mode),{}); let best = false;
+  if (!relax && [5,10,15,21].includes(n) && (!rb[n] || round.total < rb[n])){ best = !!rb[n]; rb[n]=round.total; store.set(rbKey(round.mode),rb); const ra=store.get('rbAt.'+round.mode,{}); ra[n]=Date.now(); store.set('rbAt.'+round.mode,ra); }
+  const hist = store.get('history',[]); if (!relax) hist.unshift({d:Date.now(), n, total:round.total, score, mode:round.mode}); store.set('history',hist.slice(0,30));
+  const misses = round.results.filter(r=>!r.firstOk).map(r=>r.key);
+  app.innerHTML = `
+  <div class="home gut"><div class="home-in">
+    <div class="hero"><div>
+      <div class="eyebrow">${MODES[round.mode].n} · ${n} ${round.mode==='custom'?'questions':'drinks'}${relax?' · Relax':''}</div>
+      <div class="big">${relax ? Math.round(100*score/n)+'%' : fmt(round.total)}</div>
+      <p class="lede"><b style="color:var(--fg)">${score} of ${n}</b> right first time${relax?' · accuracy only, no timer':''}${best?' <span class="badge">New record</span>':''}</p>
+    </div>${modeBtn()}</div>
+    <div class="card"><div class="rows">
+      ${round.results.map(r=>`<div class="row"><span><span class="ic ${r.firstOk?'ok':'no'}">${r.firstOk?'✓':'✗'}</span>${REC[r.id].name}${round.mode==='custom'?` <span class="muted small">· ${MODES[r.type].n.replace(' only','')}</span>`:''}${r.attempts>1?` <span class="muted small">· ${r.attempts} tries</span>`:''}</span>${relax?'':`<span class="r">${fmt(r.time)}</span>`}</div>`).join('')}
+    </div></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${misses.length?`<button class="primary" data-act="redo" data-ids="${misses.join(',')}">Drill my ${misses.length} miss${misses.length>1?'es':''}</button>`:''}
+      <button class="${misses.length?'ghost':'primary'}" style="width:100%;min-height:52px" data-act="again" data-n="${n}">New ${n}-drink round</button>
+      <button class="ghost" style="width:100%" data-act="home">Home</button>
+    </div>
+  </div></div>`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const a = b.dataset.act;
+  if (a==='mode'){ night=!night; store.set('night',night); applyMode(); document.querySelectorAll('.mode').forEach(m=>m.outerHTML=modeBtn()); }
+  else if (a==='relax'){ relax=!relax; store.set('relax',relax); applyRelax(); home(); toast(relax?'Relax mode on: timer off':'Timer back on','info',1200); }
+  else if (a==='mode-pick'){ mode=b.dataset.m; store.set('mode',mode); home(); }
+  else if (a==='size'){ size=+b.dataset.n; store.set('size',size); home(); }
+  else if (a==='start' && mode==='cards'){ deck(); }
+  else if (a==='start'){ if (mode==='custom' && !(custom.types.length && custom.ids.length)) { toast('Switch on at least one question type and one cocktail','bad'); return; } startNew(size); }
+  else if (a==='phase'){ cur.phase=b.dataset.p; cur.pending=null; drawPanel(); drawLadder(); }
+  else if (a==='pick'){
+    const id=b.dataset.id;
+    if (cur.inf && (cur.done || !infPick(id,b))) return;
+    if (ING[id].t==='rim'){ add(id,'Rim'); if (cur.inf) infAfterAdd(); return; }
+    cur.pending = cur.pending===id ? null : id; drawPanel(); drawLadder();
+  }
+  else if (a==='meas'){
+    if (!cur.pending){ nope(b); toast('Tap an ingredient first','info',1200); return; }
+    if (cur.inf && !infMeasure(b.dataset.m,b)) return;
+    add(cur.pending, b.dataset.m); if (cur.inf) infAfterAdd();
+  }
+  else if (a==='unflip'){ cur.pending=null; flip(false); }
+  else if (a==='rm'){ if (cur.done) return; cur.build.splice(+b.dataset.k,1); drawPanel(); drawGlass(); }
+  else if (a==='hint'){ infHint(); }
+  else if (a==='answer'){ if (cur.done) return; cur.mistakes++; cur.wrongs.push('looked at answer'); showAnswer(); }
+  else if (a==='cpick'){ openCard(b.dataset.id, true); }
+  else if (a==='crand'){ openCard(pickRandom(deckSt.cur), false); }
+  else if (a==='cflip'){ flipCard(); }
+  else if (a==='cmark'){ markCard(b.dataset.v==='1'); }
+  else if (a==='cclose'){ closeSheet(); deck(false); }
+  else if (a==='creset'){ deckSt.marks = {}; deck(); }
+  else if (a==='summary'){ genSummary(b); }
+  else if (a==='infnext'){ closeSheet(); nextInf(); }
+  else if (a==='restart'){ closeSheet(); nextInf(cur.id); toast('Same drink, fresh start','info',1000); }
+  else if (a==='lim'){ const k=b.dataset.k; limits[k]=Math.min(180,Math.max(3,limits[k]+(+b.dataset.d))); store.set('limits',limits); home(); }
+  else if (a==='limreset'){ limits={small:12,big:30}; store.set('limits',limits); home(); }
+  else if (a==='prev'){ if (!cur?.done) showPrev(); }
+  else if (a==='closeprev'){ closeSheet(); }
+  else if (a==='skip'){ const t=REC[cur.id].name; nextInf(); toast(`Skipped ${t}`,'info',1000); }
+  else if (a==='ditem'){ drillItem(b.dataset.i); }
+  else if (a==='dtog'){ if (cur.stopped) return; const i=b.dataset.i; cur.picks.has(i)?cur.picks.delete(i):cur.picks.add(i); b.classList.toggle('sel'); document.getElementById('dcheck').disabled=!cur.picks.size; }
+  else if (a==='dcheck'){ if (cur.picks.size){ document.getElementById('dcheck').hidden=true; drillAnswer([...cur.picks].sort().join(',')); } }
+  else if (a==='ctype'){ const t=b.dataset.t; custom.types = custom.types.includes(t) ? custom.types.filter(x=>x!==t) : [...custom.types,t]; store.set('custom',custom); home(); }
+  else if (a==='cid'){ const i=b.dataset.i; custom.ids = custom.ids.includes(i) ? custom.ids.filter(x=>x!==i) : [...custom.ids,i]; store.set('custom',custom); home(); }
+  else if (a==='call'){ custom.ids = b.dataset.v==='all' ? [...ALL] : []; store.set('custom',custom); home(); }
+  else if (a==='dans'){ drillAnswer(b.dataset.v); }
+  else if (a==='submit'){ if (cur.build.length) submit(); }
+  else if (a==='retry'){ retry(); }
+  else if (a==='advance'){ advance(); }
+  else if (a==='quit'){
+    if (cur?.inf || Date.now()-quitArm < 3000){ round=null; cur=null; home(); }
+    else { quitArm=Date.now(); b.textContent='Tap again'; setTimeout(()=>{ const q=document.getElementById('quit'); if(q) q.textContent='Quit'; },3000); }
+  }
+  else if (a==='redo'){ startRound(shuffle(b.dataset.ids.split(','))); }
+  else if (a==='again'){ startNew(+b.dataset.n); }
+  else if (a==='home'){ home(); }
+});
+
+home();
+</script>
+
+
+</body>
+</html>
